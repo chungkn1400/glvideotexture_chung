@@ -1,0 +1,28 @@
+[Project]
+Version=3
+Description=glvideotexture
+Api=fb (FreeBASIC)
+[Make]
+Current=1
+1=Windows GUI,fbc -s gui
+Recompile=2
+Module=Module Build,fbc -c
+[TabOrder]
+TabOrder=1,2,3,4
+[File]
+1=glvideotexture.bas
+2=gui_chung.bi
+3=imagesave.bi
+4=gl_chung.bi
+5=ico.rc
+[BreakPoint]
+1=
+2=
+3=
+4=
+[FileInfo]
+1=0,386,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2=0,693,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3=0,99,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+4=0,109,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+5=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

@@ -1,0 +1,25 @@
+[Project]
+Version=3
+Description=seashore
+Api=fb (FreeBASIC)
+[Make]
+Current=1
+1=Windows GUI,fbc -s gui
+Recompile=2
+Module=Module Build,fbc -c
+[TabOrder]
+TabOrder=1,2,3
+[File]
+1=seashore.bas
+2=gui_chung.bi
+3=gl_chung.bi
+4=ico.rc
+[BreakPoint]
+1=
+2=
+3=
+[FileInfo]
+1=0,649,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+4=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2=0,2070,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3=0,204,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
