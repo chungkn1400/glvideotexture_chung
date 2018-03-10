@@ -406,7 +406,7 @@ While quit=0 And guitestkey(vk_escape)=0
 		If winh=getactivewindow() Then tactive=1
 		Var vol=max(5.0,min(1000.0,1000*200/max(200.0,330-mx)))
 		mcisendstring("setaudio ocean volume to "+Str(Int(vol)),0,0,0)
-		vol=max(5.0,min(1000.0,230*100/max(100.0,1100+mx)))
+		vol=max(5.0,min(1000.0,230*110/max(100.0,1100+mx)))
 		mcisendstring("setaudio nature volume to "+Str(Int(vol)),0,0,0)
 	EndIf
 
@@ -1240,6 +1240,17 @@ glColorMask(GL_true, GL_true, GL_true, GL_true)
 glDepthMask(GL_true)
 glcolor4f(1,1,1,1)	
 End Sub
+Sub drawboussole
+Dim As Single rx=12,dx=20,dy=20,scale=0.8,cosx,sinx
+glpushmatrix
+cosx=cos1:sinx=sin1 
+gldrawtext "+", xmax-dx, ymax-dy,scale
+gldrawtext "S", xmax-dx+cosx*rx, ymax-dy+sinx*rx,scale
+gldrawtext "N", xmax-dx-cosx*rx, ymax-dy-sinx*rx,scale
+gldrawtext "W", xmax-dx-sinx*rx, ymax-dy+cosx*rx,scale
+gldrawtext "E", xmax-dx+sinx*rx, ymax-dy-cosx*rx,scale
+glpopmatrix
+End Sub
 Sub display()
 Dim As Integer i,j,k 
 
@@ -1249,7 +1260,7 @@ Dim As Integer i,j,k
 	glloadidentity
 		 
    yh=28'50'28
-   mx=max(-1800.0,min(1800.0,mx))
+   mx=max(-2400.0,min(1800.0,mx))
    If mz>4 Then o22=0:o33=0:z22=0
    
    cos1=Cos(o1*degtorad):sin1=Sin(o1*degtorad)
@@ -1323,6 +1334,8 @@ EndIf
 	    gldisable gl_depth_test
 	    
 	    drawmouse()
+	    
+	    drawboussole()
 	    
        If auxtest>0.01 Then  
         If Abs(auxvar)>0.00001 Then gldrawtext("aux= "+Str(auxvar),15,ymax-179,1.2)
@@ -1641,7 +1654,7 @@ Next
 glend() 	
 glcolor3f(1,1,1)
 End Sub
-Const As Integer ntree=180+120
+Const As Integer ntree=180+120+580
 Dim Shared As uint treetext,treetext2,shadowtreetext,shadowtreetext2
 Dim Shared As Integer treetype(ntree) 
 Dim Shared As Single o1tree,treex(ntree),treey(ntree),treez(ntree)
@@ -1659,8 +1672,10 @@ If treetext=0 Then
 		treey(i)=my+(Rnd-0.5)*4000
 		If i<180 Then
 			treex(i)=-20-Rnd*2000
-		Else
+		ElseIf i<180+120 Then 
 			treex(i)=-20-1200-Rnd*1000
+		Else
+			treex(i)=-20-1900-Rnd*600
 		EndIf
 		treez(i)=0
 	Next
@@ -1692,7 +1707,7 @@ EndIf
     	 glscalef(scz,scz,scz)
        Var scale=1.0*min(1.0,0.3-treex(i)/190)
        Var auxy=120*scale,auxz=(120+treetype(i)*20)*scale
-       If i>180 Then gltranslatef(0,0,-auxz*0.55)
+       If i>180 And i<180+120+220 Then gltranslatef(0,0,-auxz*0.55)
        gltexcarre2 auxy,auxz
        gltexcarre2rot auxy,auxz,60
        gltexcarre2rot auxy,auxz,120 
@@ -1736,7 +1751,7 @@ Dim As Integer i,j,k
  glenable gl_depth_test
  gldisable gl_alpha_test
 End Sub
-Const As Integer nbush=120
+Const As Integer nbush=120+100
 Dim Shared As uint bushtext,bushtext2,shadowbushtext,shadowbushtext2
 Dim Shared As Integer bushtype(nbush) 
 Dim Shared As Single o1bush,bushx(nbush),bushy(nbush),bushz(nbush)
@@ -1752,10 +1767,10 @@ If bushtext=0 Then
 	For i=1 To nbush
 		bushtype(i)=1
 		bushy(i)=my+(Rnd-0.5)*4000
-		If i<180 Then
+		If i<120 Then
 			bushx(i)=-20-Rnd*2000
 		Else
-			bushx(i)=-20-1200-Rnd*1000
+			bushx(i)=-20-1700-Rnd*800
 		EndIf
 		bushz(i)=0
 	Next
@@ -1860,7 +1875,7 @@ Randomize(0)
 For i=1 To nroc
 	rocscale(i)=(0.7+Rnd*2)*0.17
 	rocdz(i)=(Rnd-0.7)*rocscale(i)*140
-	rocx(i)=-50-Rnd*1800
+	rocx(i)=-50-Rnd*(1800+700)
 	rocy(i)=(Rnd-0.5)*1900*2
 	rocz(i)=rocdz(i)
 	roco1(i)=Rnd*360
