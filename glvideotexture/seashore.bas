@@ -1743,6 +1743,7 @@ EndIf
       'While treex(i)>mx+disttree :treex(i)-=disttree*2:changetree=1:Wend 	
       While treey(i)<my-disttree :treey(i)+=disttree*2:changetree=1:Wend 
       While treey(i)>my+disttree :treey(i)-=disttree*2:changetree=1:Wend
+      If Abs(treex(i)-mx)+Abs(treey(i)-my)<300 Then tshowtree(i)=1 	
       If treex(i)<0 Then  
        rotavion2(treex(i)-mx,treey(i)-my)
        If x2<0.9*Abs(y2) Then Continue For
@@ -1862,6 +1863,7 @@ EndIf
       'While bushx(i)>mx+distbush :bushx(i)-=distbush*2:changebush=1:Wend 	
       While bushy(i)<my-distbush :bushy(i)+=distbush*2:changebush=1:Wend 
       While bushy(i)>my+distbush :bushy(i)-=distbush*2:changebush=1:Wend
+      If Abs(bushx(i)-mx)+Abs(bushy(i)-my)<300 Then tshowbush(i)=1 	
       If bushx(i)<0 Then
        rotavion2(bushx(i)-mx,bushy(i)-my)
        If x2<0.9*Abs(y2) Then Continue For
@@ -2086,10 +2088,8 @@ Else
  heleny+=helensi1*vv*kfps*helenv
 EndIf 
 helenv=1
-tshowhelen=0
 rotavion(helenx-mx,heleny-my,helenz-mz)
 If x2>0.9*max(Abs(y2),Abs(z2))-80 And x2<1000 Then
-	tshowhelen=1
 	glenable gl_lighting
 	glpushmatrix
 	gltranslatef(helenx,heleny,helenz)
@@ -2110,7 +2110,6 @@ EndIf
 End Sub 
 Sub drawshadowhelen()
 Dim As Integer i,j,k
- If tshowhelen=0 Then Exit Sub  	
  If tdark=1 Then Exit Sub  
  gldisable gl_depth_test
  'glenable gl_alpha_test
@@ -2173,10 +2172,8 @@ Else
  katey+=katesi1*vv*kfps*katev
 EndIf 
 katev=1
-tshowkate=0
 rotavion(katex-mx,katey-my,katez-mz)
 If x2>0.9*max(Abs(y2),Abs(z2))-80 Then
-	tshowkate=1
 	glenable gl_lighting
 	glpushmatrix
 	gltranslatef(katex,katey,katez)
@@ -2197,7 +2194,6 @@ EndIf
 End Sub 
 Sub drawshadowkate()
 Dim As Integer i,j,k
- If tshowkate=0 Then Exit Sub  	
  If tdark=1 Then Exit Sub  
  gldisable gl_depth_test
  'glenable gl_alpha_test
