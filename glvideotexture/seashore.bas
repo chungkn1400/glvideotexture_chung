@@ -192,6 +192,16 @@ Sub subreset
 	Sleep 200
 	guisetfocus("win.graph2")
 End Sub
+Dim Shared As Double time0
+const As String crlf=Chr(13)+Chr(10) 
+Sub subhelp
+Var msg="scale => sea scale"
+msg+=crlf+"blue...red => bikini color"
+msg+=crlf+"wavez => deep ocean wave heights"
+msg+=crlf+"arrows => move"
+guinotice msg
+time0=timer
+End Sub
 Sub initsounds()
 	Dim As String soundfic
    soundfic="sounds/hello how are you.mp3"
@@ -245,6 +255,7 @@ combobox("win.hour",@subhour,495,10,60,500)
 combobox("win.bikini",@subbikini,565,10,80,500)
 combobox("win.wavez",@subwavez,660,10,90,500)
 button("win.reset","reset",@subreset,765,10,70,20)
+button("win.help","help",@subhelp,845,10,70,20)
 graphicbox("win.graph2",2,35,xmax,ymax,"opengl")
 openwindow("win","seashore",4,4,xmax+10,70+ymax)
 
@@ -382,7 +393,7 @@ Const As Single degtorad=ASin(1)/90
 Const As Single radtodeg=90/ASin(1)
 Dim Shared As Integer tactive
 
-Dim Shared As double time0,time1,time2,dtime=0,fps=1,timemsg,kfps=1
+Dim Shared As double time1,time2,dtime=0,fps=1,timemsg,kfps=1
 time0=Timer
 
 While quit=0 And guitestkey(vk_escape)=0
@@ -1251,6 +1262,25 @@ gldrawtext "W", xmax-dx-sinx*rx, ymax-dy+cosx*rx,scale
 gldrawtext "E", xmax-dx+sinx*rx, ymax-dy-cosx*rx,scale
 glpopmatrix
 End Sub
+Dim Shared As Single x1,y1,z1,x2,y2,z2
+Sub rotavion(ByVal x As Single,ByVal y As Single,ByVal z As Single)
+ x1=x*cos1+y*sin1
+ 'y1=0-x*sin1+y*cos1
+ 'z1=z
+ x2=x1*cos2+z*sin2
+ 'y2=y1
+ y2=-x*sin1+y*cos1
+ z2=-x1*sin2+z*cos2
+End Sub
+Sub rotavion2(ByVal x As Single,ByVal y As Single)
+ x2=x*cos1+y*sin1
+ 'y1=0-x*sin1+y*cos1
+ 'z1=z
+ 'x2=x1'*cos2+z*sin2
+ 'y2=y1
+ y2=-x*sin1+y*cos1
+ 'z2=-x1*sin2+z*cos2
+End Sub
 Sub display()
 Dim As Integer i,j,k 
 
@@ -1260,7 +1290,7 @@ Dim As Integer i,j,k
 	glloadidentity
 		 
    yh=28'50'28
-   mx=max(-2400.0,min(1800.0,mx))
+   mx=max(-2400.0-2000,min(1800.0,mx))
    If mz>4 Then o22=0:o33=0:z22=0
    
    cos1=Cos(o1*degtorad):sin1=Sin(o1*degtorad)
@@ -1654,9 +1684,10 @@ Next
 glend() 	
 glcolor3f(1,1,1)
 End Sub
-Const As Integer ntree=180+120+580
+Const As Integer ntree0=180+120+580
+Const As Integer ntree=ntree0+ntree0
 Dim Shared As uint treetext,treetext2,shadowtreetext,shadowtreetext2
-Dim Shared As Integer treetype(ntree) 
+Dim Shared As Integer treetype(ntree),tshowtree(ntree) 
 Dim Shared As Single o1tree,treex(ntree),treey(ntree),treez(ntree)
 Dim Shared As Double timetree
 Sub drawtrees()	
@@ -1667,7 +1698,7 @@ If treetext=0 Then
 	shadowtreetext=guiloadtexture(ExePath+"/media/palmier.jpg",250,255,4)
 	shadowtreetext2=guiloadtexture(ExePath+"/media/palmier2.jpg",250,255,4)
 	Randomize(0)
-	For i=1 To ntree
+	For i=1 To ntree0
 		treetype(i)=1-Int(Rnd*1.75)
 		treey(i)=my+(Rnd-0.5)*4000
 		If i<180 Then
@@ -1679,6 +1710,21 @@ If treetext=0 Then
 		EndIf
 		treez(i)=0
 	Next
+	For j=1 To ntree0
+		i=j+ntree0
+		treetype(i)=1-Int(Rnd*1.75)
+		treey(i)=my+(Rnd-0.5)*4000
+		If j<180 Then
+			treex(i)=-20-Rnd*2000
+		ElseIf j<180+120 Then 
+			treex(i)=-20-1200-Rnd*1000
+		Else
+			treex(i)=-20-1900-Rnd*600
+		EndIf
+		Var x0=-2500
+		treex(i)=x0+(x0-treex(i))
+		treez(i)=0		
+	Next
 	Randomize(Timer)
 EndIf
       If Timer>timetree Or Timer<(timetree-99) Then
@@ -1688,18 +1734,23 @@ EndIf
       glenable gl_alpha_test
       glAlphaFunc(gl_less,10/254)
       glcolor3f(1,1,1)
- For i= 1 To ntree
  	   glenable gl_alpha_test
-      Select Case treetype(i)
-      	Case 0:glbindtexture(GL_TEXTURE_2D,treetext)
-      	Case 1:glbindtexture(GL_TEXTURE_2D,treetext2)
-      End Select
+ For i= 1 To ntree
+      tshowtree(i)=0
+ 	   If Abs(treex(i)-mx)>2000 Then Continue For 
       Var changetree=0,disttree=2500	
-      While treex(i)<mx-disttree :treex(i)+=disttree*2:changetree=1:Wend 
-      While treex(i)>mx+disttree :treex(i)-=disttree*2:changetree=1:Wend 	
+      'While treex(i)<mx-disttree :treex(i)+=disttree*2:changetree=1:Wend 
+      'While treex(i)>mx+disttree :treex(i)-=disttree*2:changetree=1:Wend 	
       While treey(i)<my-disttree :treey(i)+=disttree*2:changetree=1:Wend 
       While treey(i)>my+disttree :treey(i)-=disttree*2:changetree=1:Wend
       If treex(i)<0 Then  
+       rotavion2(treex(i)-mx,treey(i)-my)
+       If x2<0.9*Abs(y2) Then Continue For
+       tshowtree(i)=1 	
+       Select Case treetype(i)
+      	Case 0:glbindtexture(GL_TEXTURE_2D,treetext)
+      	Case 1:glbindtexture(GL_TEXTURE_2D,treetext2)
+       End Select
     	 glpushmatrix
    	 gltranslatef(treex(i),treey(i),treez(i)-10)
     	 glrotatef(o1tree+(treex(i)+treey(i))/22,0,0,1)
@@ -1707,7 +1758,12 @@ EndIf
     	 glscalef(scz,scz,scz)
        Var scale=1.0*min(1.0,0.3-treex(i)/190)
        Var auxy=120*scale,auxz=(120+treetype(i)*20)*scale
-       If i>180 And i<180+120+220 Then gltranslatef(0,0,-auxz*0.55)
+       If i>180 And i<180+120+220 Then
+       	gltranslatef(0,0,-auxz*0.55)
+       Else
+      	Var ii=ntree0+(ntree0-i)
+         If ii>180 And ii<180+120+220 Then gltranslatef(0,0,-auxz*0.55)
+       EndIf 
        gltexcarre2 auxy,auxz
        gltexcarre2rot auxy,auxz,60
        gltexcarre2rot auxy,auxz,120 
@@ -1726,6 +1782,7 @@ Dim As Integer i,j,k
  glblendfunc gl_zero,gl_one_minus_src_color
  glcolor4f(0.6,0.6,0.6,1) 
  For i=1 To ntree
+ 	     If tshowtree(i)=0 Then Continue For 
  	     If treex(i)>0 Then Continue For 
         Select Case treetype(i)
         	Case 0:glbindtexture(GL_TEXTURE_2D,shadowtreetext)
@@ -1751,9 +1808,9 @@ Dim As Integer i,j,k
  glenable gl_depth_test
  gldisable gl_alpha_test
 End Sub
-Const As Integer nbush=120+100
+Const As Integer nbush0=120+100,nbush=nbush0+nbush0
 Dim Shared As uint bushtext,bushtext2,shadowbushtext,shadowbushtext2
-Dim Shared As Integer bushtype(nbush) 
+Dim Shared As Integer bushtype(nbush),tshowbush(nbush) 
 Dim Shared As Single o1bush,bushx(nbush),bushy(nbush),bushz(nbush)
 Dim Shared As Double timebush
 Sub drawbushs()	
@@ -1764,7 +1821,7 @@ If bushtext=0 Then
 	shadowbushtext=guiloadtexture(ExePath+"/media/buisson2.jpg",250,255,4)
 	shadowbushtext2=guiloadtexture(ExePath+"/media/buisson2.jpg",250,255,4)
 	Randomize(1)
-	For i=1 To nbush
+	For i=1 To nbush0
 		bushtype(i)=1
 		bushy(i)=my+(Rnd-0.5)*4000
 		If i<120 Then
@@ -1772,6 +1829,19 @@ If bushtext=0 Then
 		Else
 			bushx(i)=-20-1700-Rnd*800
 		EndIf
+		bushz(i)=0
+	Next
+	For j=1 To nbush0
+		i=j+nbush0
+		bushtype(i)=1
+		bushy(i)=my+(Rnd-0.5)*4000
+		If j<120 Then
+			bushx(i)=-20-Rnd*2000
+		Else
+			bushx(i)=-20-1700-Rnd*800
+		EndIf
+		Var x0=-2500
+      bushx(i)=x0+(x0-bushx(i))
 		bushz(i)=0
 	Next
 	Randomize(Timer)
@@ -1783,18 +1853,23 @@ EndIf
       glenable gl_alpha_test
       glAlphaFunc(gl_less,10/254)
       glcolor3f(0.6,0.65,0.6)
- For i= 1 To nbush
  	   glenable gl_alpha_test
-      Select Case bushtype(i)
-      	Case 0:glbindtexture(GL_TEXTURE_2D,bushtext)
-      	Case 1:glbindtexture(GL_TEXTURE_2D,bushtext2)
-      End Select
+ For i= 1 To nbush
+      tshowbush(i)=0
+ 	   If Abs(bushx(i)-mx)>2000 Then Continue For 
       Var changebush=0,distbush=2500	
-      While bushx(i)<mx-distbush :bushx(i)+=distbush*2:changebush=1:Wend 
-      While bushx(i)>mx+distbush :bushx(i)-=distbush*2:changebush=1:Wend 	
+      'While bushx(i)<mx-distbush :bushx(i)+=distbush*2:changebush=1:Wend 
+      'While bushx(i)>mx+distbush :bushx(i)-=distbush*2:changebush=1:Wend 	
       While bushy(i)<my-distbush :bushy(i)+=distbush*2:changebush=1:Wend 
       While bushy(i)>my+distbush :bushy(i)-=distbush*2:changebush=1:Wend
-      If bushx(i)<0 Then  
+      If bushx(i)<0 Then
+       rotavion2(bushx(i)-mx,bushy(i)-my)
+       If x2<0.9*Abs(y2) Then Continue For
+       tshowbush(i)=1 	
+       Select Case bushtype(i)
+      	Case 0:glbindtexture(GL_TEXTURE_2D,bushtext)
+      	Case 1:glbindtexture(GL_TEXTURE_2D,bushtext2)
+       End Select
     	 glpushmatrix
    	 gltranslatef(bushx(i),bushy(i),bushz(i)-10)
     	 glrotatef(o1bush+(bushx(i)+bushy(i))/22,0,0,1)
@@ -1821,6 +1896,7 @@ Dim As Integer i,j,k
  glblendfunc gl_zero,gl_one_minus_src_color
  glcolor4f(0.6,0.6,0.6,1) 
  For i=1 To nbush
+ 	     If tshowbush(i)=0 Then Continue For 
  	     If bushx(i)>0 Then Continue For 
         Select Case bushtype(i)
         	Case 0:glbindtexture(GL_TEXTURE_2D,shadowbushtext)
@@ -1841,16 +1917,6 @@ Dim As Integer i,j,k
  gldisable gl_blend
  glenable gl_depth_test
  gldisable gl_alpha_test
-End Sub
-Dim Shared As Single x1,y1,z1,x2,y2,z2
-Sub rotavion(ByVal x As Single,ByVal y As Single,ByVal z As Single)
- x1=x*cos1+y*sin1
- 'y1=0-x*sin1+y*cos1
- 'z1=z
- x2=x1*cos2+z*sin2
- 'y2=y1
- y2=-x*sin1+y*cos1
- z2=-x1*sin2+z*cos2
 End Sub
 Function loadlist(fic As String,size As Single=150) As UInteger 
 Dim As uInt myobjlist
@@ -1944,7 +2010,7 @@ Dim As Integer i,j,k
  gldisable gl_alpha_test
 End Sub
 Dim Shared As uint helentext,shadowhelentext,katetext,shadowkatetext,helenbluetext,helenredtext,helenyellowtext
-Dim Shared As Integer testhelen,testkate
+Dim Shared As Integer testhelen,testkate,tshowhelen,tshowkate
 Dim Shared As Single helenx,heleny,helenz,heleno1,helenco1,helensi1,helenv=1,disthelen
 Dim Shared As myobj_type helenobj,helenobj0,helenobj1,helenobj2 
 Dim Shared As Single katex,katey,katez,kateo1,kateco1,katesi1,katev=1,distkate
@@ -2020,8 +2086,10 @@ Else
  heleny+=helensi1*vv*kfps*helenv
 EndIf 
 helenv=1
+tshowhelen=0
 rotavion(helenx-mx,heleny-my,helenz-mz)
 If x2>0.9*max(Abs(y2),Abs(z2))-80 And x2<1000 Then
+	tshowhelen=1
 	glenable gl_lighting
 	glpushmatrix
 	gltranslatef(helenx,heleny,helenz)
@@ -2041,7 +2109,8 @@ If x2>0.9*max(Abs(y2),Abs(z2))-80 And x2<1000 Then
 EndIf
 End Sub 
 Sub drawshadowhelen()
-Dim As Integer i,j,k 	
+Dim As Integer i,j,k
+ If tshowhelen=0 Then Exit Sub  	
  If tdark=1 Then Exit Sub  
  gldisable gl_depth_test
  'glenable gl_alpha_test
@@ -2104,8 +2173,10 @@ Else
  katey+=katesi1*vv*kfps*katev
 EndIf 
 katev=1
+tshowkate=0
 rotavion(katex-mx,katey-my,katez-mz)
 If x2>0.9*max(Abs(y2),Abs(z2))-80 Then
+	tshowkate=1
 	glenable gl_lighting
 	glpushmatrix
 	gltranslatef(katex,katey,katez)
@@ -2125,7 +2196,8 @@ If x2>0.9*max(Abs(y2),Abs(z2))-80 Then
 EndIf
 End Sub 
 Sub drawshadowkate()
-Dim As Integer i,j,k 	
+Dim As Integer i,j,k
+ If tshowkate=0 Then Exit Sub  	
  If tdark=1 Then Exit Sub  
  gldisable gl_depth_test
  'glenable gl_alpha_test
