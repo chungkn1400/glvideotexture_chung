@@ -45,6 +45,23 @@ If i<>iimage Then
 EndIf
 Sleep 200
 End Sub
+Dim Shared As Integer tfolderimage
+Dim Shared As String folderimage
+Sub subfolder()
+Dim As String fic,dir0
+Dim As Integer ret 
+dir0=CurDir
+ChDir(ExePath+"\media\")  
+fic=filedialog("load","glvideo0.jpg")
+fic=Trim(fic)
+ret=ChDir(dir0)
+folderimage=""
+If LCase(Right(fic,12))="glvideo0.jpg" Then
+	folderimage=Left(fic,Len(fic)-12)
+	'guinotice folderimage
+	tfolderimage=1
+EndIf 	
+End Sub 
 Sub subleftmouse
 guisetfocus("win.graph2")
 Sleep 200
@@ -73,6 +90,7 @@ combobox("win.scale2",@subscale2,400,10,80,400)
 combobox("win.image",@subimage,495,10,80,400)
 combobox("win.dx",@subdx,600,10,60,500)
 combobox("win.dy",@subdy,670,10,60,500)
+button("win.folder","folder image",@subfolder,745,10,100,23)
 graphicbox("win.graph2",2,35,xmax,ymax,"opengl")
 openwindow("win","glvideotest",4,4,xmax+10,70+ymax)
 
@@ -148,6 +166,23 @@ Dim As Integer i=0
 Var nimage=""
 If ii>1 Then nimage=Str(ii)
 Var fic=(ExePath+"/media/image"+nimage+"/glvideo"+Str(i)+".jpg")
+If ii=0 Then
+	fic=(folderimage+"glvideo"+Str(i)+".jpg")
+   If FileExists(fic)=0 Then
+	   guinotice fic+" not found !"
+	   Exit Sub
+   EndIf 
+   For i=0 To 11
+	  If mygltext(i)<>0 Then guideletetexture(mygltext(i))
+	  mygltext(i)=guiloadtexture(folderimage+"glvideo"+Str(i)+".jpg")
+     guiscan
+     printgui("win.msg","load texture "+Str(i))
+     Sleep 100    
+   Next i
+   printgui("win.msg",Space(200))
+   Exit Sub 
+printgui("win.msg",Space(200))
+EndIf
 If FileExists(fic)=0 Then
 	guinotice fic+" not found !"
 	iimage=iimage0
@@ -176,6 +211,10 @@ While quit=0 And guitestkey(vk_escape)=0
    If tinitimage=1 Then
    	tinitimage=0
    	inittextures(iimage)
+   EndIf
+   If tfolderimage=1 Then
+   	tfolderimage=0
+   	inittextures(0)
    EndIf
    
 	time2=time1

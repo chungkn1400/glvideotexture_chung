@@ -62,8 +62,13 @@ videodx=4*int(512\4):videody=4*Int(256\4)
 size=1024 
 guiconfirm("size 1024 ? no=>512","confirm",resp)
 If resp="no" Then
-	size=512:guinotice "size=512"
+	size=512':guinotice "size=512"
    videodx=2*int(512\4):videody=2*Int(256\4)		
+   guiconfirm("size 512 ? no=>256","confirm",resp)
+   If resp="no" Then
+	   size=256:guinotice "size=256"
+      videodx=int(512\4):videody=Int(256\4)
+   EndIf    		
 EndIf
 
 xmax=wx-20:ymax=wy-30-videody+172
