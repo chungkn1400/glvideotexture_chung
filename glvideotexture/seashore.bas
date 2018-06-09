@@ -202,6 +202,12 @@ msg+=crlf+"arrows => move"
 guinotice msg
 time0=timer
 End Sub
+Dim Shared As Integer tcanoe
+Sub subcanoe
+tcanoe=(tcanoe+1)Mod 2
+Sleep 200
+guisetfocus("win.graph2")
+End Sub
 Sub initsounds()
 	Dim As String soundfic
    soundfic="sounds/hello how are you.mp3"
@@ -210,16 +216,28 @@ Sub initsounds()
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias ocean",0,0,0)
    soundfic="sounds/nature.mp3"
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias nature",0,0,0)
+   soundfic="sounds/waterwave.mp3"
+   mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias waterwave",0,0,0)
    mcisendstring("play hello from 0",0,0,0)
    mcisendstring("play ocean from 0 repeat",0,0,0)
    mcisendstring("play nature from 0 repeat",0,0,0)
 	mcisendstring("setaudio nature volume to "+Str(Int(10)),0,0,0)
+	mcisendstring("setaudio waterwave volume to "+Str(Int(400)),0,0,0)
 End Sub
 Sub closesounds()
    mcisendstring("close hello",0,0,0)
    mcisendstring("close ocean",0,0,0)
    mcisendstring("close nature",0,0,0)
+	mcisendstring("close waterwave",0,0,0)
    mcisendstring("close all",0,0,0)
+End Sub
+Dim Shared As Single twater 
+Sub soundwaterwave
+If twater>Timer+999 Then twater=Timer 'if midnight
+If Timer>(twater+0.7) Then
+  	twater=Timer
+   mcisendstring("play waterwave from 0",0,0,0)
+EndIf 
 End Sub
 initsounds()
 
@@ -238,6 +256,8 @@ ibikini=1
 If Not Eof(file) Then Line Input #file,ficin:ibikini=Val(ficin)
 kwavez=1
 If Not Eof(file) Then Line Input #file,ficin:kwavez=Val(ficin)
+tcanoe=0
+If Not Eof(file) Then Line Input #file,ficin:tcanoe=Val(ficin)
 Close #file
 
 Dim Shared As Integer wx,wy,depth
@@ -256,6 +276,7 @@ combobox("win.bikini",@subbikini,565,10,80,500)
 combobox("win.wavez",@subwavez,660,10,90,500)
 button("win.reset","reset",@subreset,765,10,70,20)
 button("win.help","help",@subhelp,845,10,70,20)
+button("win.canoe","canoe",@subcanoe,925,10,70,20)
 graphicbox("win.graph2",2,35,xmax,ymax,"opengl")
 openwindow("win","seashore",4,4,xmax+10,70+ymax)
 
@@ -391,10 +412,12 @@ inittextureswave(iimage)
 
 Const As Single degtorad=ASin(1)/90
 Const As Single radtodeg=90/ASin(1)
-Dim Shared As Integer tactive
+Dim Shared As Integer tactive,trun
 
+Dim Shared  As Single mx0,my0,mz0,o10
 Dim Shared As double time1,time2,dtime=0,fps=1,timemsg,kfps=1
 time0=Timer
+
 
 While quit=0 And guitestkey(vk_escape)=0
 	guiscan
@@ -432,8 +455,10 @@ While quit=0 And guitestkey(vk_escape)=0
     If guitestkey(vk_numpad5) Then o2=0
     If guitestkey(vk_left) Or guitestkey(vk_numpad1) Or mouseleft And tmm Then o1+=3*kfps
     If guitestkey(vk_right) Or guitestkey(vk_numpad3) Or mouseright And tmm Then o1-=3*kfps
-    If guitestkey(vk_up) Or mouseforward And tmm Then
-    	 mx+=vv*cos1*kfps:my+=vv*sin1*kfps
+    If guitestkey(vk_c) Then subcanoe():Sleep 200
+    If (guitestkey(vk_up) Or mouseforward And tmm)Or trun=1 Then
+    	 Var kkfps=kfps:If mx>100 Then kkfps*=0.3
+    	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
     	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
     EndIf
     If guitestkey(vk_down) Or mouseback And tmm Then
@@ -443,6 +468,12 @@ While quit=0 And guitestkey(vk_escape)=0
     If guitestkey(vk_z) Or guitestkey(vk_w) Then mz=min(150.0,mz+kfps*0.5)
     If guitestkey(vk_s) Then mz=max(0.0,mz-kfps*0.5)
    EndIf 
+   If mx>100 Then
+   	If Abs(mx-mx0)+Abs(my-my0)+Abs(mz-mz0)+Abs(o10-o1)>1 Then
+   		mx0=mx:my0=my:mz0=mz:o10=o1
+   		soundwaterwave()
+   	EndIf
+   EndIf
 
    display()
 	guirefreshopenGL()
@@ -472,6 +503,7 @@ Print #file,o2
 Print #file,o3
 Print #file,ibikini
 Print #file,kwavez
+Print #file,tcanoe
 Close #file	
 
 Sleep 1000
@@ -1202,6 +1234,7 @@ Declare Sub drawshadowrocs()
 Declare Sub drawshadowhelen()
 Declare Sub drawshadowkate()
 Declare Sub drawrocs()
+Declare Sub drawcanoe()
 Declare Sub drawhelene()
 Declare Sub drawkate()
 Declare Sub drawsunset()
@@ -1357,7 +1390,9 @@ EndIf
 	drawkate()
    glnormal3f(0,0,1)
 
-   If mx<100 Then testcollide()
+   If mx<100 And o2>-45 Then testcollide()
+	
+	drawcanoe()
 	
    gldisable gl_lighting
    
@@ -2011,7 +2046,65 @@ Dim As Integer i,j,k
  glenable gl_depth_test
  gldisable gl_alpha_test
 End Sub
+Dim Shared As Single collidex,collidey,collidez
+Dim Shared As uint canoetext,canoelist
+Dim Shared As Single canoex,canoey,canoez,canoeo1,canoeo2,canoeo3
+Dim Shared As Integer tup
+Dim Shared As Double timeup
+Sub drawcanoe()
+Dim As Integer i
+If tcanoe=0 Then trun=0:Exit Sub  
+If canoetext=0 Then
+	canoetext=guiloadtexture(ExePath+"/objects/canoe_low.jpg")
+   canoelist=loadlist(ExePath+"/objects/canoe_low.3ds",40)
+EndIf
+canoex=mx:canoey=my:canoez=max(mz+18.5,collidez+3)
+If mx<100 Then
+	canoez=mz+8
+	canoeo1=o1:canoeo2=0:canoeo3=0
+	trun=0
+Else 
+ Var tt=Timer 
+ canoeo1=o1+Cos(tt*2)*4
+ canoeo2+=(Cos(-tt*3)*4-canoeo2)*min(0.9,0.3*kfps)
+ If guitestkey(vk_up) Then 
+ 	canoeo2+=(Cos(-tt*5.5)*6.5-canoeo2)*min(0.9,0.3*kfps)
+ 	If tup=0 Then
+ 		tup=1:timeup=tt
+ 	ElseIf tt>timeup+1 Then
+ 		trun=1
+ 	EndIf
+ Else
+ 	If guitestkey(vk_down) Then trun=0
+ 	If tup=1 And tt<timeup+1 Then trun=0
+ 	tup=0
+ 	If trun=1 Then
+ 	  canoeo2+=(Cos(-tt*5.5)*5.5-canoeo2)*min(0.9,0.3*kfps)	  	
+ 	EndIf
+ EndIf
+ If trun=0 Then
+ 	canoeo3=Sin(tt*2.7)*4
+ Else 	
+ 	canoeo3=Sin(tt*2.8)*5.5
+ EndIf
+EndIf  
+glcolor3f(1,1,1)
+glbindtexture(GL_TEXTURE_2D,canoetext)
+'gldisable gl_lighting
+     rotavion(canoex-mx,canoey-my,canoez-mz)
+     If x2>(0.9*max(Abs(y2),Abs(z2))-200) Then 	
+      glClear (GL_DEPTH_BUFFER_BIT)
+    	glpushmatrix
+  		gltranslatef(canoex,canoey,canoez)
+    	glrotatef(canoeo1,0,0,1)
+    	glrotatef(canoeo2,0,1,0)
+    	glrotatef(canoeo3,1,0,0)
+    	glcalllist canoelist
+      glpopmatrix
+     EndIf  
+End Sub 
 Dim Shared As uint helentext,shadowhelentext,katetext,shadowkatetext,helenbluetext,helenredtext,helenyellowtext
+Dim Shared As uint shadowhelen2text,shadowkate2text
 Dim Shared As Integer testhelen,testkate,tshowhelen,tshowkate
 Dim Shared As Single helenx,heleny,helenz,heleno1,helenco1,helensi1,helenv=1,disthelen
 Dim Shared As myobj_type helenobj,helenobj0,helenobj1,helenobj2 
@@ -2039,6 +2132,7 @@ If helentext=0 Then
 	helenredtext=guiloadtexture(ExePath+"/objects/helene_bikini_red.jpg")
 	helenyellowtext=guiloadtexture(ExePath+"/objects/helene_bikini_yellow.jpg")
 	shadowhelentext=guiloadtexture(ExePath+"/objects/heleneshadow.jpg",250,255,4)
+	shadowhelen2text=guiloadtexture(ExePath+"/objects/heleneshadow2.jpg",250,255,4)
    load3DSsizeptr(ExePath+"/objects/helene_bikini.3ds",@helenobj0,150)
    load3DSsizeptr(ExePath+"/objects/helene_bikini_walk1.3ds",@helenobj1,150)
    load3DSsizeptr(ExePath+"/objects/helene_bikini_walk2.3ds",@helenobj2,150)
@@ -2117,14 +2211,40 @@ Dim As Integer i,j,k
  glenable gl_blend
  glblendfunc gl_zero,gl_one_minus_src_color
  glcolor4f(0.6,0.6,0.6,1) 
- glbindtexture(GL_TEXTURE_2D,shadowhelentext)
+	Var kt=1.9*Timer+1
+	Var kx=Cos(kt)'(1+Cos(kt))*0.8
+	'morphobj3ds(@helenobj,@helenobj0,kx,@helenobj1,(1-kx))
+	Var kx2=Sin(kt)'(1+Sin(kt))*0.65
+	'morphobj3ds(@helenobj,@helenobj,kx2,@helenobj2,(1-kx2))
+	Var ky=1.0
+	If heleno1<0 then
+	 If (kx)<-0.7 Then
+		ky=-1
+		glbindtexture(GL_TEXTURE_2D,shadowhelentext)
+	 ElseIf (kx2)<-0.7 Then 
+		glbindtexture(GL_TEXTURE_2D,shadowhelentext)
+	 Else 	
+		ky=-1
+		glbindtexture(GL_TEXTURE_2D,shadowhelen2text)
+	 EndIf
+	Else
+	 If (kx2)<-0.7 Then
+		ky=-1
+		glbindtexture(GL_TEXTURE_2D,shadowhelentext)
+	 ElseIf (kx)<-0.7 Then 
+		glbindtexture(GL_TEXTURE_2D,shadowhelentext)
+	 Else 	
+		ky=1
+		glbindtexture(GL_TEXTURE_2D,shadowhelen2text)
+	 EndIf
+	EndIf  
         glpushmatrix
    	  gltranslatef(helenx,heleny,helenz+0.5)
    	  glrotatef(suno1,0,0,1)
    	  glrotatef(90,0,1,0)
         Var scale=0.214
         Var auxy=120*scale,auxz=150*scale        
-  	  	  gltexcarre2(auxy,auxz*suntan2)        
+  	  	  gltexcarre2(auxy*ky,auxz*suntan2)        
         glpopmatrix
  glcolor4f(1,1,1,1)
  gldisable gl_blend
@@ -2137,6 +2257,7 @@ If katetext=0 Then
 	Randomize()
 	katetext=guiloadtexture(ExePath+"/objects/helene_bikini_green.jpg")
 	shadowkatetext=guiloadtexture(ExePath+"/objects/heleneshadow.jpg",250,255,4)
+	shadowkate2text=guiloadtexture(ExePath+"/objects/heleneshadow2.jpg",250,255,4)
 	katex=34
 	katey=heleny-(100+Rnd*400)*Sgn(Rnd-0.5)
 	katez=0
@@ -2201,14 +2322,40 @@ Dim As Integer i,j,k
  glenable gl_blend
  glblendfunc gl_zero,gl_one_minus_src_color
  glcolor4f(0.6,0.6,0.6,1) 
- glbindtexture(GL_TEXTURE_2D,shadowkatetext)
+	Var kt=1.9*Timer+1
+	Var kx=Cos(kt)'(1+Cos(kt))*0.8
+	'morphobj3ds(@helenobj,@helenobj0,kx,@helenobj1,(1-kx))
+	Var kx2=Sin(kt)'(1+Sin(kt))*0.65
+	'morphobj3ds(@helenobj,@helenobj,kx2,@helenobj2,(1-kx2))
+	Var ky=1.0
+	If kateo1<0 then
+	 If (kx)>0.7 Then
+		glbindtexture(GL_TEXTURE_2D,shadowkatetext)
+	 ElseIf (kx2)<-0.7 Then 
+		ky=-1
+		glbindtexture(GL_TEXTURE_2D,shadowkatetext)
+	 Else 	
+		ky=1
+		glbindtexture(GL_TEXTURE_2D,shadowkate2text)
+	 EndIf
+	Else
+	 If (kx2)>0.7 Then
+		glbindtexture(GL_TEXTURE_2D,shadowkatetext)
+	 ElseIf (kx)>0.7 Then 
+		ky=-1
+		glbindtexture(GL_TEXTURE_2D,shadowkatetext)
+	 Else 	
+		ky=-1
+		glbindtexture(GL_TEXTURE_2D,shadowkate2text)
+	 EndIf
+	EndIf  
         glpushmatrix
    	  gltranslatef(katex,katey,katez+0.5)
    	  glrotatef(suno1,0,0,1)
    	  glrotatef(90,0,1,0)
         Var scale=0.214
         Var auxy=120*scale,auxz=150*scale        
-  	  	  gltexcarre2(-auxy,auxz*suntan2)        
+  	  	  gltexcarre2(-auxy*ky,auxz*suntan2)        
         glpopmatrix
  glcolor4f(1,1,1,1)
  gldisable gl_blend
@@ -2242,6 +2389,9 @@ If dist<12 And dist>0 Then
 	mx-=5*cos1
 	my-=5*sin1
 EndIf
+collidex=posx
+collidey=posy
+collidez=posz
 End Sub
 
 
