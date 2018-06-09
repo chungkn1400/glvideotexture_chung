@@ -199,6 +199,11 @@ Var msg="scale => sea scale"
 msg+=crlf+"blue...red => bikini color"
 msg+=crlf+"wavez => deep ocean wave heights"
 msg+=crlf+"arrows => move"
+msg+=crlf+"pageup,down => look up/down"
+msg+=crlf+"C => canoe on/off"
+msg+=crlf+"Z,S => fly up/down"
+msg+=crlf+"F1 => help"
+msg+=crlf+"F3 => change time"
 guinotice msg
 time0=timer
 End Sub
@@ -445,6 +450,7 @@ While quit=0 And guitestkey(vk_escape)=0
 	EndIf
 
    If tactive=1 Then
+    If guitestkey(vk_f1) Then subhelp()	
     If guitestkey(vk_f3) Then subdtime()	
     Var vv=1.5
     Var tmm=0:If Timer>timemouse+0.2 Then tmm=-1
@@ -680,6 +686,100 @@ Sub setvideotexture(ByVal dtime As Double,ByRef itexture As Integer,ByRef tx As 
 	dtx=1/2:dty=0.86/4         
 End Sub
 Sub drawsea0(ddx As Single=0)
+Dim As Integer i,j,k,p
+Var dz0=-50.0,dzz0=-50.0,dzz=-50.0,dz=-50.0	
+Var dtime=time1-time0
+Dim As integer itexture=0
+Dim As Single tx=0.0,ty=0.0,dtx=1.0,dty=1.0
+setvideotexture(dtime,itexture,tx,ty,dtx,dty)
+glenable gl_texture_2D
+glbindtexture gl_texture_2D,mygltext(itexture)
+glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_linear)
+glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_linear)'NEAREST)'nomipmap
+glnormal3f(0,0,1)
+var n30=int(30+mz*0.3)
+For p=1 To 3+mz/15
+glpushmatrix
+gltranslatef((p-1)*400,0,0)
+For i=-n30 To n30
+	glpushmatrix
+	Var sc=scale2*1.5
+	Var ky=sc*17.8*2*2
+	dzz0=dz0
+	dz0=-Abs(i*1.9)-90/max(9.0,115-mx)
+   glTranslatef (100+ddx,ky*(i/2+Int(my/ky-0.5)),0)
+   If ((i+200) Mod 2)=1 Then
+   	glscalef(-1,-1,1)
+   	dzz=dz0
+   	dz=dzz0
+   Else
+   	dzz=-dzz0
+   	dz=-dz0
+   EndIf
+   'glrotatef(90,0,0,1)
+   'glrotatef(90,1,0,0)
+	/'Var dtime1=dtime-Int(dtime)
+	Var ix=Int(dtime1*2)
+	Var iy=Int((dtime1*2-ix)*4)
+	Var tx=(ix)/2
+	Var ty=(3-iy)/4,dtx=1/2,dty=0.86/4'/
+	Var dx=17.9
+	Var dxx=0.0
+	Var kcos=1.25*(1-cos1*0.25)
+	If mx>330 Then dxx=-dx*kcos
+	'Var sc=scale2*1.6
+	glscalef(sc,sc,1)
+	glbegin(gl_quads)
+	glTexCoord2f(tx,ty)
+	glvertex3f(0,-dx,-dxx)
+	gltexcoord2f(tx+dtx,ty)
+	glvertex3f(0,dx,-dxx)
+	glTexCoord2f(tx+dtx,ty+dty)
+	glvertex3f(dz,dx,dx+dx-Abs(dz*1.6)-7)
+	gltexcoord2f(tx,ty+dty)
+	glvertex3f(dzz,-dx,dx+dx-Abs(dzz*1.6)-7)
+	glend()
+	If mx+ddx>270 Then dxx=-dx*0.5
+	If mx>330 Then dxx=-dx*1.1
+	Var d7=0.3*dx*Sgn(dzz)
+	glbegin(gl_quads)
+	glTexCoord2f(tx,ty)
+	glvertex3f(0,-dx-d7,-dxx)
+	gltexcoord2f(tx+dtx,ty)
+	glvertex3f(0,dx-d7,-dxx)
+	glTexCoord2f(tx+dtx,ty+dty)
+	glvertex3f(dz*4,dx-d7,dx*1.4)
+	gltexcoord2f(tx,ty+dty)
+	glvertex3f(dzz*4,-dx-d7,dx*1.4)
+	glend()
+	If mx+ddx>270 Then dxx=-dx
+	If mx>330 Then dxx=-dx*1.2
+	glbegin(gl_quads)
+	glTexCoord2f(tx,ty)
+	glvertex3f(dzz*2,-dx,-dxx)
+	gltexcoord2f(tx+dtx,ty)
+	glvertex3f(dz*2,dx,-dxx)
+	glTexCoord2f(tx+dtx,ty+dty)
+	glvertex3f(dz*6,dx,dx*1.4)
+	gltexcoord2f(tx,ty+dty)
+	glvertex3f(dzz*6,-dx,dx*1.4)
+	glend()
+	glbegin(gl_quads)
+	glTexCoord2f(tx,ty)
+	glvertex3f(dzz*6,-dx-d7,-dxx)
+	gltexcoord2f(tx+dtx,ty)
+	glvertex3f(dz*6,dx-d7,-dxx)
+	glTexCoord2f(tx+dtx,ty+dty)
+	glvertex3f(dz*10,dx-d7,dx*1.5)
+	gltexcoord2f(tx,ty+dty)
+	glvertex3f(dzz*10,-dx-d7,dx*1.5)
+	glend()
+	glpopmatrix
+Next i
+glpopmatrix
+Next p
+End Sub
+Sub drawsea0_okold(ddx As Single=0)
 Dim As Integer i,j,k,p
 Var dz0=-50.0,dzz0=-50.0,dzz=-50.0,dz=-50.0	
 Var dtime=time1-time0
@@ -2058,7 +2158,7 @@ If canoetext=0 Then
 	canoetext=guiloadtexture(ExePath+"/objects/canoe_low.jpg")
    canoelist=loadlist(ExePath+"/objects/canoe_low.3ds",40)
 EndIf
-canoex=mx:canoey=my:canoez=max(mz+18.5,collidez+3)
+canoex=mx:canoey=my:canoez=max(mz-mz+18.5,collidez+3)
 If mx<100 Then
 	canoez=mz+8
 	canoeo1=o1:canoeo2=0:canoeo3=0
