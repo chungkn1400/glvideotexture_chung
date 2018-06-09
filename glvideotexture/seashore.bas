@@ -223,17 +223,21 @@ Sub initsounds()
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias nature",0,0,0)
    soundfic="sounds/waterwave.mp3"
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias waterwave",0,0,0)
+   soundfic="sounds/seagull.mp3"
+   mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias seagull",0,0,0)
    mcisendstring("play hello from 0",0,0,0)
    mcisendstring("play ocean from 0 repeat",0,0,0)
    mcisendstring("play nature from 0 repeat",0,0,0)
 	mcisendstring("setaudio nature volume to "+Str(Int(10)),0,0,0)
 	mcisendstring("setaudio waterwave volume to "+Str(Int(400)),0,0,0)
+	mcisendstring("setaudio seagull volume to "+Str(Int(180)),0,0,0)
 End Sub
 Sub closesounds()
    mcisendstring("close hello",0,0,0)
    mcisendstring("close ocean",0,0,0)
    mcisendstring("close nature",0,0,0)
 	mcisendstring("close waterwave",0,0,0)
+	mcisendstring("close seagull",0,0,0)
    mcisendstring("close all",0,0,0)
 End Sub
 Dim Shared As Single twater 
@@ -244,7 +248,11 @@ If Timer>(twater+0.7) Then
    mcisendstring("play waterwave from 0",0,0,0)
 EndIf 
 End Sub
+Sub soundseagull
+		mcisendstring("play seagull from 0",0,0,0)
+End Sub
 initsounds()
+'soundseagull
 
 Dim As String ficin
 Dim As String ficini="seashore.ini"
@@ -1340,6 +1348,7 @@ Declare Sub drawkate()
 Declare Sub drawsunset()
 Declare Sub drawsunsetwater()
 Declare Sub drawskydome(rx As Single,ix0 As Integer,iy0 As Integer)
+Declare Sub drawseagull()
 Sub drawshadows()
 gldisable gl_depth_test 
 glenable gl_texture_2D
@@ -1488,6 +1497,7 @@ EndIf
 	drawrocs()
 	drawhelene()
 	drawkate()
+	drawseagull()
    glnormal3f(0,0,1)
 
    If mx<100 And o2>-45 Then testcollide()
@@ -2461,6 +2471,65 @@ Dim As Integer i,j,k
  gldisable gl_blend
  glenable gl_depth_test
  gldisable gl_alpha_test
+End Sub
+Dim Shared As uint seagulltext(5)
+Dim Shared As Single seagullx,seagully,seagullz,seagullo1
+Sub initseagull()
+seagullo1=Rnd*360-180
+Var co1=Cos(degtorad*seagullo1),si1=Sin(degtorad*seagullo1)
+cos1=Cos(degtorad*o1):sin1=Sin(degtorad*o1)
+Var r=700
+seagullx=mx-r*co1+r*(Rnd-0.5)*0.5
+seagully=my-r*si1+r*(Rnd-0.5)*0.5
+If (cos1*co1+sin1*si1)>-0.25 Then
+	seagullx+=r*cos1*0.75
+	seagully+=r*sin1*0.75
+EndIf
+seagullz=((10+5*Rnd)*5+mz)
+End Sub
+Dim Shared As Double tsoundseagull
+Sub drawseagull()
+Dim As Integer i	
+If seagulltext(0)=0 Then
+  For i=0 To 4
+	 seagulltext(i)=guiloadtexture(ExePath+"/media/seagull/seagull"+Str(i+1)+".jpg",250)
+  Next
+  initseagull()	
+EndIf
+ Var co1=Cos(degtorad*seagullo1),si1=Sin(degtorad*seagullo1)
+ Var dxy=(seagullx-mx)*si1-(seagully-my)*co1
+ Var v=0.9*kfps
+ seagullx+=v*co1:seagully+=v*si1
+ 'seagullx=mx+580:seagully=my:seagullz=mz
+ Var dist=max(Abs(seagullx-mx),Abs(seagully-my))
+ If dist<180 Then
+ 	If Timer>tsoundseagull Then
+ 		tsoundseagull=Timer+Rnd*Rnd*30
+ 		soundseagull()
+ 	EndIf
+ EndIf
+ If dist>800 Then
+ 	if Rnd<0.005*kfps Then initseagull()
+ EndIf
+ seagullz=max(mz+8+dist*0.15,min(mz+dist*0.3,seagullz))
+ seagullz=min(400,seagullz)
+ glbindtexture(gl_texture_2d,seagulltext(Int(Timer*3.6)Mod 5))
+ glenable gl_alpha_test
+ glAlphaFunc(gl_less,20/254)
+ 'gldisable gl_depth_test
+ glcolor4f(0.6,0.6,0.6,1)
+ glpushmatrix
+ 'seagullx=mx+500*cos1*cos1:seagully=my+500*sin1*cos1':seagullz=mz+100*cos1
+ gltranslatef(seagullx,seagully,seagullz)
+ If dxy>0 Then
+ 	glrotatef(o1,0,0,1)
+ Else
+ 	glrotatef(o1+180,0,0,1)
+ EndIf
+ gltexcarre2(19,19)
+ glpopmatrix
+ gldisable gl_alpha_test
+ glenable gl_depth_test 
 End Sub
 Dim Shared As Double timecollide
 Sub testcollide()
