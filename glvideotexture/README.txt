@@ -6,7 +6,7 @@ double click on glvideotexture.exe and it wil run !
 
 works with avi or wmv or mci compatible video files (about 11 sec, 9fps)
 
-result : 12 textures 1024 jpg (8 images per texture) in /media/image/ folder
+result : 12 textures 1024 or 512 or 256 jpg (8 images per texture) in /media/image/ folder
 
 
 glvideotest.exe test opengl only

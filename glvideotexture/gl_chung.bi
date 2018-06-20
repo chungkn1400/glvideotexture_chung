@@ -130,6 +130,18 @@ Sub gltexcarrexy(ByVal dx As Single,tx0 As Single=0,ty0 As Single=0,ByVal tx As 
 	glvertex3f(-dx,dx,0)
 	glend()
 End Sub 
+Sub gltexcarredtxy(ByVal dx As Single,ByVal dy As Single,ByVal dz As Single,tx0 As Single=0,ty0 As Single=0,ByVal dtx As Single=1,ByVal dty As Single=1)
+	glbegin(gl_quads)
+	glTexCoord2f(tx0,ty0)
+	glvertex3f(0,-dx,0)
+	gltexcoord2f(tx0+dtx,ty0)
+	glvertex3f(0,dx,0)
+	glTexCoord2f(tx0+dtx,ty0+dty)
+	glvertex3f(0,dy,dz)
+	gltexcoord2f(tx0,ty0+dty)
+	glvertex3f(0,-dy,dz)
+	glend()
+End Sub 
 Sub gltexcarre2(byval x As Single,ByVal y As Single,ByVal tx As Single=1,ByVal ty0 As Single=0)
 Dim As Single x1,x0,dtx,dty
 x1=x*0.5:x0=0-x1:dtx=0'max(0.0,tx*(y/x-1)*0.5)

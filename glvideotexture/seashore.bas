@@ -254,6 +254,8 @@ End Sub
 initsounds()
 'soundseagull
 
+Dim Shared As Single canoex,canoey,canoez,canoeo1,canoeo2,canoeo3
+
 Dim As String ficin
 Dim As String ficini="seashore.ini"
 file=FreeFile
@@ -271,6 +273,11 @@ kwavez=1
 If Not Eof(file) Then Line Input #file,ficin:kwavez=Val(ficin)
 tcanoe=0
 If Not Eof(file) Then Line Input #file,ficin:tcanoe=Val(ficin)
+canoex=80:canoey=0:canoez=0:canoeo1=0
+If Not Eof(file) Then Line Input #file,ficin:canoex=Val(ficin)
+If Not Eof(file) Then Line Input #file,ficin:canoey=Val(ficin)
+If Not Eof(file) Then Line Input #file,ficin:canoez=Val(ficin)
+If Not Eof(file) Then Line Input #file,ficin:canoeo1=Val(ficin)
 Close #file
 
 Dim Shared As Integer wx,wy,depth
@@ -371,7 +378,7 @@ guistartOpenGL("win.graph2")
 
 'Declare Sub testopengl()
 'testopengl()
-Dim Shared As uint mygltext(11),mygltextwave(11)
+Dim Shared As uint mygltext(11),mygltextwave(11),mygltextfire(11),firetext,mygltextshadowfire(11)
 Sub inittextures(ii As Integer=1)
 Dim As Integer i=0
 Var nimage=""
@@ -420,8 +427,37 @@ For i=0 To 11
 Next
 printgui("win.msg",Space(200))
 End Sub
+Sub inittexturesfire(ii As Integer=1)
+Dim As Integer i=0
+Var nimage=""
+If ii>1 Then nimage=Str(ii)
+'Var fic=(ExePath+"/media/image"+nimage+"/glvideo"+Str(i)+".jpg")
+Var fic=(ExePath+"/media/fire256/glvideo"+Str(i)+".jpg")
+If FileExists(fic)=0 Then
+	guinotice fic+" not found !"
+	iimage=iimage0
+	selectcomboindex("win.image",iimage)
+   Exit Sub 
+EndIf
+iimage=ii
+iimage0=iimage
+For i=0 To 11
+	If mygltextfire(i)<>0 Then guideletetexture(mygltextfire(i))
+	'mygltextfire(i)=guiloadtexture(ExePath+"/media/image"+nimage+"/glvideo"+Str(i)+".jpg")
+	mygltextfire(i)=guiloadtexture(ExePath+"/media/fire256/glvideo"+Str(i)+".jpg",250)'254,1,5)
+	If mygltextshadowfire(i)<>0 Then guideletetexture(mygltextshadowfire(i))
+	mygltextshadowfire(i)=guiloadtexture(ExePath+"/media/fire256/glvideo"+Str(i)+".jpg",120,255)
+   guiscan
+   printgui("win.msg","load texturefire "+Str(i))
+   Sleep 100
+Next
+If firetext<>0 Then guideletetexture(firetext)
+firetext=guiloadtexture(ExePath+"/media/fire.jpg",250)
+printgui("win.msg",Space(200))
+End Sub
 inittextures(iimage)
 inittextureswave(iimage)
+inittexturesfire(iimage)
 
 Const As Single degtorad=ASin(1)/90
 Const As Single radtodeg=90/ASin(1)
@@ -431,6 +467,7 @@ Dim Shared  As Single mx0,my0,mz0,o10
 Dim Shared As double time1,time2,dtime=0,fps=1,timemsg,kfps=1
 time0=Timer
 
+Randomize(0)
 
 While quit=0 And guitestkey(vk_escape)=0
 	guiscan
@@ -492,9 +529,9 @@ While quit=0 And guitestkey(vk_escape)=0
    display()
 	guirefreshopenGL()
  
-	If Abs(auxvar)>0.00001 Then
-	   printguih(winmsg,"aux="+Str(auxvar)+"          ")
-	EndIf
+	'If Abs(auxvar)>0.00001 Then
+	'   printguih(winmsg,"aux="+Str(auxvar)+"          ")
+	'EndIf
 	If guitestkey(vk_escape) Or guitestkey(vk_space) Then
 		If winh=getactivewindow() Then quit=1
 	EndIf
@@ -518,6 +555,10 @@ Print #file,o3
 Print #file,ibikini
 Print #file,kwavez
 Print #file,tcanoe
+Print #file,canoex
+Print #file,canoey
+Print #file,canoez
+Print #file,canoeo1
 Close #file	
 
 Sleep 1000
@@ -1341,7 +1382,14 @@ Declare Sub drawshadowbushs()
 Declare Sub drawshadowrocs()
 Declare Sub drawshadowhelen()
 Declare Sub drawshadowkate()
+Declare Sub drawseagullshadow()
+Declare Sub drawcabaneshadow()
+Declare Sub drawcanoeshadow()
 Declare Sub drawrocs()
+Declare Sub drawcabane()
+Declare Sub drawfire()
+Declare Sub drawsmokes()
+Declare Sub addsmoke(ByVal mx As Single,ByVal my As Single,ByVal mz As Single,ByVal itype As Integer=0,ByVal vz As Single=0)
 Declare Sub drawcanoe()
 Declare Sub drawhelene()
 Declare Sub drawkate()
@@ -1364,6 +1412,8 @@ drawshadowbushs()
 drawshadowrocs()
 drawshadowhelen()
 drawshadowkate()
+drawcabaneshadow()
+drawcanoeshadow()
 
 gldisable gl_texture_2D
 gldisable gl_alpha_test
@@ -1414,6 +1464,7 @@ Sub rotavion(ByVal x As Single,ByVal y As Single,ByVal z As Single)
  y2=-x*sin1+y*cos1
  z2=-x1*sin2+z*cos2
 End Sub
+Dim Shared As Single z23
 Sub rotavion2(ByVal x As Single,ByVal y As Single)
  x2=x*cos1+y*sin1
  'y1=0-x*sin1+y*cos1
@@ -1433,14 +1484,16 @@ Dim As Integer i,j,k
 		 
    yh=28'50'28
    mx=max(-2400.0-2000,min(1800.0,mx))
-   If mz>4 Then o22=0:o33=0:z22=0
+   If mz>4 Then
+   	o22=0:o33=0:z22=0
+   EndIf
    
    cos1=Cos(o1*degtorad):sin1=Sin(o1*degtorad)
    cos2=Cos((o2+o22)*degtorad):sin2=Sin((o2+o22)*degtorad)
    cos3=Cos((o3+o33)*degtorad):sin3=Sin((o3+o33)*degtorad)
    dmx=cos1*cos2:dmy=sin1*cos2:dmz=sin2
 	'glulookat(mx,my,mz+yh, mx+1000*dmx,my+1000*dmy,mz+1000*dmz+yh, 0,0,1)
-   glulookat(mx,my,mz+yh+z22, mx+1000*dmx,my+1000*dmy,mz+1000*dmz+yh+z22, -sin3*sin1*0.9985*cos2,sin3*cos1*0.9985*cos2,cos3)
+   glulookat(mx,my,mz+yh+z22+z23, mx+1000*dmx,my+1000*dmy,mz+1000*dmz+yh+z22+z23, -sin3*sin1*0.9985*cos2,sin3*cos1*0.9985*cos2,cos3)
 
 	'dtime=time1-time0
 	'itime=Int(dtime)Mod 12
@@ -1490,6 +1543,9 @@ EndIf
 	drawshadowbushs()
 	drawshadowhelen()
 	drawshadowkate()
+	drawseagullshadow()
+   drawcabaneshadow()
+   drawcanoeshadow()
 	drawtrees()
 	drawbushs()
    
@@ -1498,9 +1554,14 @@ EndIf
 	drawhelene()
 	drawkate()
 	drawseagull()
+	drawcabane()
+	drawfire()
+	drawsmokes()
    glnormal3f(0,0,1)
 
-   If mx<100 And o2>-45 Then testcollide()
+   If o2>-45 Then'and mx<100
+   	testcollide()
+   EndIf
 	
 	drawcanoe()
 	
@@ -1534,7 +1595,7 @@ EndIf
 	    
 End Sub
 Dim Shared As Double tksoleil,heure0
-Dim Shared As Single ksoleil,kxsoleil,kysoleil,kzsoleil,suno1,suntan2=1
+Dim Shared As Single ksoleil,kxsoleil,kysoleil,kzsoleil,suno1,suntan2=1,sunco1=1,sunsi1=0
 Dim Shared As Integer iheure,iheure0
 Sub setksoleil
   If Timer<tksoleil+10 And Abs(heure-heure0)<1 Then Exit Sub
@@ -1595,6 +1656,8 @@ Sub setksoleil
   kxsoleil=aux*x:kysoleil=aux*y:kzsoleil=aux*z
   suno1=diro1(kxsoleil,kysoleil)
   suntan2=Sqr(x*x+y*y)/max(0.001,z)
+  sunco1=Cos(suno1*degtorad)
+  sunsi1=Sin(suno1*degtorad)
 
    gllightfv(gl_light0,GL_position,glparam4f(mx-kxsoleil*9,my-kysoleil*9,mz+kzsoleil*9,0))'w=0,directional
    glLightf(gl_light0, GL_SPOT_EXPONENT, 0.0)'3.0)
@@ -2156,17 +2219,228 @@ Dim As Integer i,j,k
  glenable gl_depth_test
  gldisable gl_alpha_test
 End Sub
-Dim Shared As Single collidex,collidey,collidez
-Dim Shared As uint canoetext,canoelist
-Dim Shared As Single canoex,canoey,canoez,canoeo1,canoeo2,canoeo3
+Dim Shared As uint cabanetext,cabanelist,chairtext,chairlist
+Dim Shared As Single cabanex,cabaney,cabanez,cabaneo1
+Sub drawcabane()
+Dim As Integer i 
+If cabanetext=0 Then
+	cabanetext=guiloadtexture(ExePath+"/objects/cabane.jpg")
+   cabanelist=loadlist(ExePath+"/objects/cabane.3ds",118)
+	chairtext=guiloadtexture(ExePath+"/objects/chair.jpg")
+   chairlist=loadlist(ExePath+"/objects/chair.3ds",26.7)
+	cabanex=-400
+	cabaney=140
+	cabanez=0
+	cabaneo1=0
+EndIf
+z23=0
+If Abs(cabanex-mx)<60 Then
+   If Abs(cabaney-my)<28 Then
+		z23=7
+	EndIf
+EndIf
+Var distcabane=2000
+glcolor3f(1,1,1)
+glbindtexture(GL_TEXTURE_2D,cabanetext)
+'gldisable gl_lighting
+     Var changecabane=0
+     'While cabanex<mx-distcabane :cabanex+=distcabane*2:changecabane=1:Wend 
+     'While cabanex>mx+distcabane :cabanex-=distcabane*2:changecabane=1:Wend 	
+     While cabaney<my-distcabane :cabaney+=distcabane*2:changecabane=1:Wend 
+     While cabaney>my+distcabane :cabaney-=distcabane*2:changecabane=1:Wend 
+     'If cabanex>100 Then Continue For 
+     rotavion(cabanex-mx,cabaney-my,cabanez-mz)
+     If x2>(0.9*max(Abs(y2),Abs(z2))-200) Then 	
+    	glpushmatrix
+  		gltranslatef(cabanex,cabaney,cabanez)
+    	glrotatef(cabaneo1+90,0,0,1)
+    	glcalllist cabanelist
+    	glpopmatrix
+    	glpushmatrix
+  		gltranslatef(cabanex,cabaney,cabanez)
+    	gltranslatef(35,20,9)
+      glbindtexture(GL_TEXTURE_2D,chairtext)
+      glrotatef(-58,0,0,1)
+      glcalllist chairlist
+      glpopmatrix
+     EndIf
+If tdark=1 then glenable gl_lighting
+End Sub
+Dim Shared As Double tfiresmoke
+Dim Shared As Single firex,firey,firez
+Sub drawfire()
+firex=cabanex+198:firey=cabaney+150:firez=-2.5
+If time2>tfiresmoke+0.4 Then
+	tfiresmoke=time2+(Rnd-0.5)*0.3
+	addsmoke(firex+(Rnd-0.5),firey+(Rnd-0.5),firez+20+(Rnd-0.5)*2,0,11+(Rnd-0.5)*2)
+EndIf
+rotavion(firex-mx,firey-my,firez-mz)
+If x2>0.9*max(Abs(y2),Abs(z2))-100 Then
+   glenable gl_alpha_test
+   glAlphaFunc(gl_less,10/254)
+	glbindtexture(gl_texture_2d,firetext)
+	glpushmatrix
+	gltranslatef(firex,firey,firez)
+	Var do1=diro1(firex-mx,firey-my)
+	glrotatef(do1,0,0,1)
+	gltexcarre2(16,16)
+	gldisable gl_alpha_test 
+
+   Var dtime=time1-time0+4
+   Dim As integer itexture=0
+   Dim As Single tx=0.0,ty=0.0,dtx=1.0,dty=1.0
+   setvideotexture(dtime,itexture,tx,ty,dtx,dty)
+   glbindtexture gl_texture_2D,mygltextfire(itexture)
+   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_linear)
+   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_linear)'NEAREST)'nomipmap
+	gltranslatef(-1,0,7.7)
+   gldisable gl_lighting
+   glenable gl_blend
+   glblendfunc gl_src_color,gl_one_minus_src_color
+   glcolor3f(0.9,0.9,0.5)
+   'glscalef(1.3,1.3,1.3)
+	gltexcarredtxy(3.8,2,11,tx,ty,dtx,dty)
+   If tdark=0 Then
+   	glpopmatrix
+      'glcolor4f(0.5,0.7,0.8,0.4)
+      glcolor4f(1,1,1,0.42)
+      glblendfunc gl_zero,gl_one_minus_src_alpha
+      glbindtexture gl_texture_2D,mygltextshadowfire(itexture)
+   	glpushmatrix 
+	   gltranslatef(firex,firey,firez+4.4)
+   	glrotatef(suno1,0,0,1)
+   	glrotatef(90,0,1,0)
+      'glscalef(1.3,1.3,1.3)
+   	gltexcarredtxy(3.8,2,11*suntan2,tx,ty,dtx,dty)
+   EndIf
+   gldisable gl_blend
+   glcolor4f(1,1,1,1)
+   If tdark=1 Then glenable(gl_lighting)
+	glpopmatrix
+EndIf
+End Sub
+Const As Integer nsmoke=50
+Dim Shared As uint smoketext 
+Dim Shared As Integer ismoke=0,typesmoke(nsmoke)'20
+Dim Shared As Double smoketime(nsmoke)
+Dim Shared As Single tsmoke=0,smokex(nsmoke),smokey(nsmoke),smokez(nsmoke),smokevz(nsmoke)
+Sub addsmoke(ByVal mx As Single,ByVal my As Single,ByVal mz As Single,ByVal itype As Integer=0,ByVal vz As Single=0)
+Dim i As Integer
+For i=1 To nsmoke
+	ismoke+=1
+	If ismoke>nsmoke Then ismoke=0
+	If typesmoke(ismoke)<2 Then
+		Exit For  
+	Else 
+	   If time2>(smoketime(ismoke)+17) Then Exit For
+   EndIf 
+Next i
+	smokex(ismoke)=mx
+	smokey(ismoke)=my
+	smokez(ismoke)=mz
+   smoketime(ismoke)=time2
+   typesmoke(ismoke)=itype
+   smokevz(ismoke)=vz	
+End Sub
+Sub drawsmokes()
+Dim As Integer i,j,k
+Dim As Double dt,r 
+If smoketext=0 Then
+	smoketext=guiloadtexture(ExePath+"/media/smoke.bmp")
+EndIf
+	glenable(gl_texture_2d)
+   glEnable GL_BLEND
+   glBlendFunc GL_SRC_color,GL_ONE'_MINUS_SRC_ALPHA
+	'gldisable GL_DEPTH_TEST
+	glDepthMask(GL_false)
+	For i=0 To nsmoke
+		dt=4.07
+		If typesmoke(i)=-1 Then dt=1
+		If typesmoke(i)=2 Then dt=17
+		If typesmoke(i)=3 Then dt=45'35
+		If time2<(smoketime(i)+dt) Then 			
+		   If time2<(smoketime(i)-100) Then smoketime(i)=time2+dt 'if midnight
+	      glpushmatrix
+	      smokez(i)+=smokevz(i)*0.03*kfps
+	      gltranslatef(smokex(i),smokey(i),smokez(i))
+	      glbindtexture(gl_texture_2d,smoketext)
+	      Var cc=0.88*(dt+smoketime(i)-time2+1)/(dt+1)
+	      glcolor3f(cc,cc,cc)
+	      'If tourelle=0 Then 
+	        glrotatef(o1,0,0,1)
+	        glrotatef(o2,0,1,0)
+	      'Else
+	      '  glrotatef(to1+o1,0,0,1)
+	      '  glrotatef(to2,0,1,0)
+	      'EndIf   	
+	      If typesmoke(i)=0 Then 
+	      	r=50+30*(time2-smoketime(i))
+	      ElseIf typesmoke(i)=-1 Then 
+	      	r=40+24*(time2-smoketime(i))
+	      Else 
+	      	If typesmoke(i)=1 Then 
+	      		r=150+90*(time2-smoketime(i))
+	      	Else 
+	      		r=200+200*(time2-smoketime(i))
+	      	EndIf
+	      EndIf
+	      r*=0.15
+	      gltexcarre3(r,r)
+	      glpopmatrix
+	      If tdark=0 Then
+	      	Var ccc=0.4*cc
+	      	glcolor3f(ccc,ccc,ccc)
+            glBlendFunc GL_zero,GL_ONE_MINUS_SRC_color
+	      	glpushmatrix
+	      	Var h=smokez(i)*suntan2
+	         gltranslatef(smokex(i)+h*sunco1,smokey(i)+h*sunsi1,1)
+	         glrotatef(suno1,0,0,1)
+	         gltexcarre(r)
+	      	glpopmatrix 
+	      	glcolor3f(1,1,1)
+            glBlendFunc GL_SRC_color,GL_ONE'_MINUS_SRC_ALPHA
+	      EndIf
+		EndIf
+	Next
+	glEnable GL_DEPTH_TEST
+	glDepthMask(GL_true)
+	gldisable gl_blend	
+End Sub
+Dim Shared As Single collidex,collidey,collidez,collidex2,collidey2,collidez2
+Dim Shared As uint canoetext,canoelist,canoeshadowtext,canoeshadowtext2
 Dim Shared As Integer tup
 Dim Shared As Double timeup
+Dim Shared As uint winpixZ,winpixr,winpixg,winpixb,winpixa,avgcolor
+Sub drawcanoe0()
+glcolor3f(1,1,1)
+glbindtexture(GL_TEXTURE_2D,canoetext)
+'gldisable gl_lighting
+     canoex=min(85.0-Abs(Cos(canoeo1*degtorad)*40),canoex)
+     rotavion(canoex-mx,canoey-my,canoez-mz)
+     If x2>(0.9*max(Abs(y2),Abs(z2))-200) Then 	
+      'glClear (GL_DEPTH_BUFFER_BIT)
+    	glpushmatrix
+  		If canoex<100 Then
+  			gltranslatef(canoex,canoey,0)
+  		Else 	
+  			gltranslatef(canoex,canoey,canoez)
+  		EndIf
+    	glrotatef(canoeo1,0,0,1)
+    	glrotatef(canoeo2,0,1,0)
+    	glrotatef(canoeo3,1,0,0)
+    	glcalllist canoelist
+      glpopmatrix
+     EndIf  
+End Sub
 Sub drawcanoe()
 Dim As Integer i
-If tcanoe=0 Then trun=0:Exit Sub  
 If canoetext=0 Then
 	canoetext=guiloadtexture(ExePath+"/objects/canoe_low.jpg")
    canoelist=loadlist(ExePath+"/objects/canoe_low.3ds",40)
+EndIf
+If tcanoe=0 Then
+	drawcanoe0
+	trun=0:Exit Sub  
 EndIf
 canoex=mx:canoey=my:canoez=max(mz-mz+18.5,collidez+3)
 If mx<100 Then
@@ -2176,7 +2450,18 @@ If mx<100 Then
 Else 
  Var tt=Timer 
  canoeo1=o1+Cos(tt*2)*4
- canoeo2+=(Cos(-tt*3)*4-canoeo2)*min(0.9,0.3*kfps)
+ 'canoeo2+=(Cos(-tt*3)*4-canoeo2)*min(0.9,0.3*kfps)
+ canoeo2+=(Cos(-tt*3)*2-canoeo2)*min(0.9,0.3*kfps)
+ Var mycolor=(winpixr+winpixg+winpixb)*0.33+10
+ If avgcolor<mycolor Then
+ 	avgcolor+=(mycolor-avgcolor)*min(0.9,0.05*kfps)
+ Else 
+ 	avgcolor+=(mycolor-avgcolor)*min(0.9,0.08*kfps)
+ EndIf
+ 'avgcolor=max(mycolor*0.8,min(avgcolor,mycolor))
+ If mycolor>avgcolor*1.1523 Then
+    canoeo2+=(4-canoeo2)*min(0.9,0.1715*kfps)
+ EndIf
  If guitestkey(vk_up) Then 
  	canoeo2+=(Cos(-tt*5.5)*6.5-canoeo2)*min(0.9,0.3*kfps)
  	If tup=0 Then
@@ -2472,7 +2757,7 @@ Dim As Integer i,j,k
  glenable gl_depth_test
  gldisable gl_alpha_test
 End Sub
-Dim Shared As uint seagulltext(5)
+Dim Shared As uint seagulltext(5),seagullshadowtext(5)
 Dim Shared As Single seagullx,seagully,seagullz,seagullo1
 Sub initseagull()
 seagullo1=Rnd*360-180
@@ -2492,7 +2777,8 @@ Sub drawseagull()
 Dim As Integer i	
 If seagulltext(0)=0 Then
   For i=0 To 4
-	 seagulltext(i)=guiloadtexture(ExePath+"/media/seagull/seagull"+Str(i+1)+".jpg",250)
+	 seagulltext(i)=guiloadtexture(ExePath+"/media/seagull/seagull"+Str(i+1)+".jpg",250,255)
+	 seagullshadowtext(i)=guiloadtexture(ExePath+"/media/seagull/seagull"+Str(i+1)+".jpg",250,255,4)
   Next
   initseagull()	
 EndIf
@@ -2531,6 +2817,166 @@ EndIf
  gldisable gl_alpha_test
  glenable gl_depth_test 
 End Sub
+Dim Shared As Single suno2,sunx,suny,sunz,scalesun=4
+Sub drawseagullshadow()
+ If tdark=1 Then Exit Sub  
+ 'seagullx=mx+160:seagully=my:seagullz=100+o1*5
+ Var dx=seagullx-mx,dy=seagully-my
+ 'Var dx1=seagullx-sunx,dy1=seagully-suny
+ 'Var dxx=-dx1*Cos(degtorad*(suno1-o1))-dy1*Sin(degtorad*(suno1-o1)) 
+ Var co1=Cos(degtorad*seagullo1),si1=Sin(degtorad*seagullo1)
+ Var dxy=(dx)*si1-(dy)*co1
+ glbindtexture(gl_texture_2d,seagullshadowtext(Int(Timer*3.6)Mod 5))
+ 'glenable gl_alpha_test
+ 'glAlphaFunc(gl_greater,2/254)
+ glenable gl_blend
+ glblendfunc gl_zero,gl_one_minus_src_color
+ glcolor4f(0.6,0.6,0.6,1) 
+ gldisable gl_depth_test
+ 'glcolor4f(0.05,0.05,0.05,0.55)
+ glpushmatrix
+ gltranslatef(seagullx+sunco1*seagullz*suntan2*0.3,seagully+sunsi1*seagullz*suntan2*0.3,0.5)
+ If dxy>0 Then
+ 	glrotatef(o1,0,0,1)
+ Else
+ 	glrotatef(o1+180,0,0,1)
+ EndIf
+ glrotatef(90,0,1,0)
+ Var scale=0.214
+ Var auxy=80*scale,auxz=150*scale        
+ gltexcarre2(-auxy,auxz*suntan2)        
+ glpopmatrix
+ glcolor4f(1,1,1,1)
+ gldisable gl_blend
+ glenable gl_depth_test
+ gldisable gl_alpha_test
+End Sub
+Dim Shared As uint cabaneshadowtext
+Sub drawcabaneshadow()
+If cabaneshadowtext=0 Then
+	 cabaneshadowtext=guiloadtexture(ExePath+"/objects/cabaneshadow.jpg",200,255)	
+EndIf
+If tdark=1 Then Exit Sub  
+rotavion(cabanex-mx,cabaney-my,cabanez-mz)
+If x2>0.9*max(Abs(y2),Abs(z2))-400 Then
+	Var x0=cabanex+90
+	Var y0=cabaney-90*sunco1
+	Var z0=1
+	Var h=130.0
+	Var x1=x0+h*sunco1*suntan2
+	Var y1=y0+h*sunsi1*suntan2
+	Var x2=x1-90-90
+	Var y2=y1
+	Var x3=x0-90-90
+	Var y3=cabaney+90*sunco1
+   glenable gl_blend
+   glblendfunc gl_zero,gl_one_minus_src_alpha
+   glcolor4f(0.6,0.6,0.6,0.6) 
+   gldisable gl_depth_test
+	glbindtexture(gl_texture_2d,cabaneshadowtext)
+	glbegin(gl_quads)
+	glTexCoord2f(1,0)
+	glvertex3f(x0,y0,z0)
+	gltexcoord2f(1,1)
+	glvertex3f(x1,y1,z0)
+	glTexCoord2f(0,1)
+	glvertex3f(x2,y2,z0)
+	gltexcoord2f(0,0)
+	glvertex3f(x3,y3,z0)
+	glend()
+   glcolor4f(1,1,1,1)
+   gldisable gl_blend
+   glenable gl_depth_test
+EndIf
+End Sub
+Sub drawcanoeshadow()
+If canoeshadowtext=0 Then
+	 canoeshadowtext=guiloadtexture(ExePath+"/objects/canoeshadow.jpg",200,255)	
+	 canoeshadowtext2=guiloadtexture(ExePath+"/objects/canoeshadow2.jpg",200,255)	
+EndIf
+If tdark=1 Then Exit Sub
+rotavion(canoex-mx,canoey-my,canoez-mz)
+If x2>0.9*max(Abs(y2),Abs(z2))-300 Then
+	Var co1=Cos(canoeo1*degtorad)
+	Var si1=Sin(canoeo1*degtorad)
+	Var x0=canoex+40*co1
+	Var y0=canoey+40*si1
+	Var z0=1
+	Var h=35.0
+	Var x1=x0+h*sunco1*suntan2
+	Var y1=y0+h*sunsi1*suntan2
+	Var x2=x1-(80)*co1
+	Var y2=y1-(80)*si1
+	Var x3=canoex-40*co1
+	Var y3=canoey-40*si1
+   glenable gl_blend
+   glblendfunc gl_zero,gl_one_minus_src_alpha
+   glcolor4f(0.6,0.6,0.6,0.6) 
+   'gldisable gl_depth_test
+   glDepthMask(GL_true)
+  Var do1=canoeo1-suno1	
+  Var dco1=Cos(do1*degtorad)
+  If Abs(dco1)<=0.983 Then  
+	glbindtexture(gl_texture_2d,canoeshadowtext)
+	glbegin(gl_quads)
+	glTexCoord2f(1,0)
+	glvertex3f(x0,y0,z0)
+	gltexcoord2f(1,1)
+	glvertex3f(x1,y1,z0)
+	glTexCoord2f(0,1)
+	glvertex3f(x2,y2,z0)
+	gltexcoord2f(0,0)
+	glvertex3f(x3,y3,z0)
+	glend()
+  EndIf 	
+  Var x10=30.0,y10=7,t0=0.3
+If dco1>0.983 Then
+  	x0+=-co1*x10+si1*y10
+  	y0+=-si1*x10-co1*y10
+  	x1+=-co1*x10+si1*y10
+  	y1+=-si1*x10-co1*y10
+  	x2=x1-si1*2*y10
+  	y2=y1+co1*2*y10
+  	x3=x0-si1*2*y10
+  	y3=y0+co1*2*y10
+	glbindtexture(gl_texture_2d,canoeshadowtext2)
+	glbegin(gl_quads)
+	glTexCoord2f(1,t0)
+	glvertex3f(x0,y0,z0)
+	gltexcoord2f(1,1)
+	glvertex3f(x1,y1,z0)
+	glTexCoord2f(0,1)
+	glvertex3f(x2,y2,z0)
+	gltexcoord2f(0,t0)
+	glvertex3f(x3,y3,z0)
+	glend()
+  EndIf
+  If dco1<-0.983 Then
+  	x0+=-co1*(80-x10)+si1*y10
+  	y0+=-si1*(80-x10)-co1*y10
+  	x1+=-co1*(80-x10)+si1*y10
+  	y1+=-si1*(80-x10)-co1*y10
+  	x2=x1-si1*2*y10
+  	y2=y1+co1*2*y10
+  	x3=x0-si1*2*y10
+  	y3=y0+co1*2*y10
+	glbindtexture(gl_texture_2d,canoeshadowtext2)
+	glbegin(gl_quads)
+	glTexCoord2f(1,t0)
+	glvertex3f(x0,y0,z0)
+	gltexcoord2f(1,1)
+	glvertex3f(x1,y1,z0)
+	glTexCoord2f(0,1)
+	glvertex3f(x2,y2,z0)
+	gltexcoord2f(0,t0)
+	glvertex3f(x3,y3,z0)
+	glend()
+  EndIf
+   glcolor4f(1,1,1,1)
+   gldisable gl_blend
+   glenable gl_depth_test
+EndIf
+End Sub
 Dim Shared As Double timecollide
 Sub testcollide()
 If time1<timecollide+0.1 Or testhelen=1 Or testkate=1 Then Exit Sub
@@ -2546,6 +2992,14 @@ glGetDoublev( GL_PROJECTION_MATRIX, @projection(0) )
 glGetIntegerv( GL_VIEWPORT, @viewport(0) )
 winx = xmax/2
 winy = ymax/3.5
+If mx>100 Then
+	glReadPixels( winx,winy, 1, 1, GL_RGBA, GL_UNSIGNED_byte, @winpixZ )
+	winpixa=(winpixz Shr 24)And 255
+	winpixb=(winpixz Shr 16)And 255
+	winpixg=(winpixz Shr 8)And 255
+	winpixr=(winpixz)And 255
+	Exit Sub 
+EndIf
 glReadPixels( winx,winy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, @winZ )
 gluUnProject(winX,winY,winz,@modelview(0),@projection(0),@viewport(0),@posX,@posY,@posZ)   
 'glpushmatrix
@@ -2561,8 +3015,22 @@ EndIf
 collidex=posx
 collidey=posy
 collidez=posz
+/'winy = ymax/12
+glReadPixels( winx,winy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, @winZ )
+gluUnProject(winX,winY,winz,@modelview(0),@projection(0),@viewport(0),@posX,@posY,@posZ)   
+collidex2=posx
+collidey2=posy
+collidez2=posz
+'/
 End Sub
-
+Sub drawcabaneshadowtext()	
+  glbindtexture(gl_texture_2d,cabaneshadowtext)
+  'gltexparameteri(gl_texture_2d,GL_GENERATE_MIPMAP,gl_true)
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_linear)
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_linear)'NEAREST)'nomipmap
+  'glcopyTexImage2D(GL_TEXTURE_2D, 0, gl_rgba,0,0,bmpx,bmpy, 0)   
+  glcopyTexSubImage2D(GL_TEXTURE_2D, 0, 0,0, 0,0,512,512)   
+End Sub
 
 
 
