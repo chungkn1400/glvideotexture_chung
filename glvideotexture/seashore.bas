@@ -59,7 +59,7 @@ Declare Function morphobj3DS Cdecl Alias "morphobj3DS" (ByVal myobj As myobj_typ
 
 'Dim Shared As myobj_type myobj,myobj0,myobj1,myobj2
 
-Dim Shared As Integer i,j,k,l,n,p,xmax,ymax,winx,winy,file,itime
+Dim Shared As Integer i,j,k,l,n,p,xmax,ymax,winx,winy,file,itime,ncloud2
 Dim Shared As String resp
 Sub mysubquit
 	quit=1
@@ -1442,6 +1442,8 @@ Declare Sub drawsunset()
 Declare Sub drawsunsetwater()
 Declare Sub drawskydome(rx As Single,ix0 As Integer,iy0 As Integer)
 Declare Sub drawseagull()
+Declare Sub drawclouds() 
+Declare Sub drawcloudshadows() 
 Sub drawshadows()
 gldisable gl_depth_test 
 glenable gl_texture_2D
@@ -1551,6 +1553,8 @@ Dim As Integer i,j,k
    drawskydome(6000,14,14)
    glpopmatrix 	
    drawsunset()
+   
+   drawclouds()
 
 	drawsand()
 
@@ -1593,6 +1597,7 @@ EndIf
 	drawseagullshadow()
    drawcabaneshadow()
    drawcanoeshadow()
+   drawcloudshadows()
 	drawtrees()
 	drawbushs()
    
@@ -3077,6 +3082,161 @@ Sub drawcabaneshadowtext()
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_linear)'NEAREST)'nomipmap
   'glcopyTexImage2D(GL_TEXTURE_2D, 0, gl_rgba,0,0,bmpx,bmpy, 0)   
   glcopyTexSubImage2D(GL_TEXTURE_2D, 0, 0,0, 0,0,512,512)   
+End Sub
+Dim Shared As uint cloudtext  
+Const As Integer ncloud=200
+Dim Shared As Single cloudx(ncloud),cloudy(ncloud),cloudz(ncloud),cloudr(ncloud)
+Dim Shared As Single distcloud=50000/1.3'1.5
+Sub initcloud
+Dim As Integer i
+ncloud2=min2(ncloud,ncloud2)
+Randomize(Int(Timer/1000))
+For i=1 To ncloud
+	cloudx(i)=(Rnd-0.5)*2*distcloud+mx
+	cloudy(i)=(Rnd-0.5)*2*distcloud+my
+	cloudz(i)=3000+1200*Rnd
+	cloudr(i)=(1500+Rnd*1000)*2.6
+Next
+End Sub
+Dim Shared As Single rain,krain=1
+Dim Shared As Integer ncloud22
+Sub drawcloud(ByVal i As Integer)
+	      glpushmatrix
+	      gltranslatef(cloudx(i),cloudy(i),cloudz(i))	      
+	      'glbindtexture(gl_texture_2d,cloudtext)
+	      Var cc=1.0
+	      If mz>100 Then
+	      	cc=min(1.0,max(0.45,0.45*9000/(4500+Abs(cloudx(i)-mx)+Abs(cloudy(i)-my)+Abs(cloudz(i)-mz))))
+	      Else 
+	      	cc=min(1.0,max(0.45,0.45*9000/(4500+Abs(cloudx(i)-mx)+Abs(cloudy(i)-my))))
+	      EndIf
+	      glcolor3f(cc,cc,cc)
+	      If cc>0.6 And i<=ncloud22 Then
+	      	'If Rnd<0.003*0.03*whumidity*kfps Then
+	      	'	If (rain<90 Or Rnd<0.01*kfps) Then krain=15:rain=0
+	      	'EndIf
+	      EndIf
+         glrotatef(o1,0,0,1)
+	      glrotatef(-o2,0,1,0)
+	      gltexcarre3(cloudr(i)*1.5,cloudr(i))
+	      'gltexsphere(800)
+	      glpopmatrix
+End Sub 
+Declare Sub drawrain()
+Dim Shared As Single krain0=1
+Sub drawclouds()
+Dim As Integer i 	
+Dim As Integer test
+If cloudtext=0 Then
+	cloudtext=guiloadtexture(ExePath+"/media/cloud.jpg")
+	initcloud()	
+EndIf
+'krain=0.1
+ncloud2=min2(ncloud,150)
+ncloud22=ncloud2'min2(ncloud2,Int(ncloud2*krain0))
+If ncloud2>0 Then
+If tdark=1 Then
+   glenable gl_lighting
+Else    
+	gldisable gl_lighting
+EndIf
+'glenable gl_alpha_test
+'glAlphaFunc(gl_greater,10/254)
+glEnable GL_BLEND
+glBlendFunc GL_SRC_color,GL_ONE'_MINUS_SRC_ALPHA
+gldisable GL_DEPTH_TEST
+'glDepthMask(GL_false)
+gldisable gl_alpha_test
+glenable(gl_texture_2d)
+glbindtexture(gl_texture_2d,cloudtext)
+glcolor4f(1,1,1,1)
+For i=1 To ncloud2
+	test=0
+	cloudx(i)+=kfps*3
+	If cloudx(i)<mx-distcloud Then cloudx(i)+=1.999*distcloud:test=1
+	If cloudx(i)>mx+distcloud Then cloudx(i)-=1.999*distcloud:test=1
+	If cloudy(i)<my-distcloud Then cloudy(i)+=1.999*distcloud:test=1
+	If cloudy(i)>my+distcloud Then cloudy(i)-=1.999*distcloud:test=1
+	If test=1 Then
+		cloudz(i)=3000+1200*Rnd
+	EndIf
+	drawcloud(i)
+Next
+gldisable GL_BLEND
+glEnable GL_DEPTH_TEST
+'gldisable gl_alpha_test
+glDepthMask(GL_true)
+EndIf 
+'drawrain()
+End Sub
+Dim Shared As Single cloudshadowdo1(ncloud),cloudshadowdo2(ncloud),cloudshadowdo3(ncloud)
+Dim Shared As Single clouddz(ncloud),testcloud(11,11)
+Dim Shared As Double timecloudshadow
+Dim Shared As Integer tupdatecloudshadow
+Sub drawcloudshadow(ByVal i As Integer)
+	      If tdark<>0 Then Exit sub
+	      Var xx=cloudx(i)
+	      Var yy=cloudy(i)
+	      Var zz=max(0.0,cloudz(i))
+	      xx+=zz*sunco1*suntan2
+	      yy+=zz*sunsi1*suntan2
+	      'if i=1 And auxtest>0.4 Then xx=mx:yy=my
+	      zz=3
+	      'If zz>mz-10 And mz<mzsol00+100 Then Exit Sub 
+      Var size=cloudr(i)*2.5
+		rotavion(xx-mx,yy-my,zz-mz)
+		if x2>(0.9*max(y2,z2)-size-4000) Then
+	      Var cc=0.4
+      	'cc*=min(1.0,max(0.001,0.25*9000/(1000+Abs(xx-mx)+Abs(yy-my))))
+      	'cc*=min(1.0,max(0.001,(mz-zz)*Abs(x2)*0.002*0.002))
+	      glcolor4f(cc,cc,cc,cc)
+	      'glcolor4f(1,0,0,1)
+	      glpushmatrix
+	      'xx=mx+1400:yy=my
+	      'If xx>100-cloudr(i) Then zz=26
+	      gltranslatef(xx,yy,zz)'clouddz(i)+zz+max(2.0,(mz-zz)*0.03))	      
+	      'glbindtexture(gl_texture_2d,cloudtext)
+         glrotatef(cloudshadowdo1(i),0,0,1)
+	      glrotatef(-90,0,1,0)
+	      'glrotatef(cloudshadowdo2(i)-90,0,1,0)
+	      'glrotatef(cloudshadowdo3(i),1,0,0)
+	      gltexcarre3(cloudr(i)*1.5,cloudr(i))
+	      'gltexsphere(200)
+	      glpopmatrix
+	   EndIf    
+End Sub 
+Dim Shared As Integer tshadow0
+Sub drawcloudshadows()
+Dim As Integer i,j,k
+Dim As Integer test
+If tdark=1 Then Exit sub
+'krain=0.1
+ncloud22=ncloud2'min2(ncloud2,Int(ncloud2*krain0))
+If ncloud2>0 Then 
+'If mz<2500 Then Exit Sub 
+'glenable gl_alpha_test
+'glAlphaFunc(gl_greater,10/254)
+'glenable(gl_cull_face)
+'glcullface(gl_front)
+'gldisable gl_fog
+glenable GL_BLEND
+glBlendFunc gl_zero,GL_ONE_MINUS_SRC_color
+gldisable GL_DEPTH_TEST
+glDepthMask(GL_false)
+glenable(gl_texture_2d)
+glbindtexture(gl_texture_2d,cloudtext)
+Var cc=0.4'0.25
+glcolor4f(cc,cc,cc,1)
+For i=1 To ncloud2
+	drawcloudshadow(i)
+Next
+glcolor4f(1,1,1,1)
+glDepthMask(GL_true)
+gldisable GL_BLEND
+glEnable GL_DEPTH_TEST	
+'gldisable gl_cull_face	
+'gldisable gl_alpha_test
+EndIf 
 End Sub
 
 
