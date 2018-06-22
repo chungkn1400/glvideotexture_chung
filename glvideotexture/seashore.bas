@@ -64,6 +64,25 @@ Dim Shared As String resp
 Sub mysubquit
 	quit=1
 End Sub
+dim shared as Single sear=1,seag=1,seab=1
+Sub subsear
+Dim As Integer i  
+getcomboindex("win.sear",i)
+sear=0.5+(i)*0.01
+Sleep 100	
+End Sub
+Sub subseag
+Dim As Integer i  
+getcomboindex("win.seag",i)
+seag=0.5+(i)*0.01
+Sleep 100	
+End Sub
+Sub subseab
+Dim As Integer i  
+getcomboindex("win.seab",i)
+seab=0.5+(i)*0.01
+Sleep 100	
+End Sub
 Dim Shared As Single scale2=2
 Sub subscale2
 Dim As Integer i  
@@ -278,6 +297,10 @@ If Not Eof(file) Then Line Input #file,ficin:canoex=Val(ficin)
 If Not Eof(file) Then Line Input #file,ficin:canoey=Val(ficin)
 If Not Eof(file) Then Line Input #file,ficin:canoez=Val(ficin)
 If Not Eof(file) Then Line Input #file,ficin:canoeo1=Val(ficin)
+sear=1:seag=1:seab=1
+If Not Eof(file) Then Line Input #file,ficin:sear=Val(ficin)
+If Not Eof(file) Then Line Input #file,ficin:seag=Val(ficin)
+If Not Eof(file) Then Line Input #file,ficin:seab=Val(ficin)
 Close #file
 
 Dim Shared As Integer wx,wy,depth
@@ -288,6 +311,10 @@ guibackgroundcolor(0,0,100)
 guistatictextinkcolor(200,200,200)
 button("win.quit","quit",@mysubquit,10,10,50,20)
 'button("win.pause","pause",@subpause,70,10,50,20)
+i=0:If xmax<1184 Then i=1010-220
+combobox("win.sear",@subsear,1010-i,10,51,500)
+combobox("win.seag",@subseag,1067-i,10,51,500)
+combobox("win.seab",@subseab,1124-i,10,51,500)
 statictext("win.msg","",72,12,300,20)
 combobox("win.scale2",@subscale2,400,10,80,400)
 'combobox("win.image",@subimage,495,10,80,400)
@@ -354,6 +381,21 @@ For i=0 To 40 Step 2
 Next
 selectcomboindex("win.wavez",1+Int(kwavez/0.2+0.001))
 subwavez()
+
+For i=0 To 49
+	addcombo("win.sear","R"+Str(i+50))
+Next
+selectcomboindex("win.sear",Int(sear*100-50+0.1))
+
+For i=0 To 49
+	addcombo("win.seag","G"+Str(i+50))
+Next
+selectcomboindex("win.seag",Int(seag*100-50+0.1))
+
+For i=0 To 49
+	addcombo("win.seab","B"+Str(i+50))
+Next
+selectcomboindex("win.seab",Int(seab*100-50+0.1))
 
 'setforegroundwindow(getguih("win"))
 guisetfocus("win.quit")
@@ -559,6 +601,9 @@ Print #file,canoex
 Print #file,canoey
 Print #file,canoez
 Print #file,canoeo1
+Print #file,sear
+Print #file,seag
+Print #file,seab
 Close #file	
 
 Sleep 1000
@@ -1508,7 +1553,8 @@ Dim As Integer i,j,k
    drawsunset()
 
 	drawsand()
-	
+
+glcolor4f(sear,seag,seab,1)	
 If mx<1200 Or mz>8 Then 
 	Var dmmx=Int(mx/100)*100
 	If mx<500 Or mz>8 Then
@@ -1534,7 +1580,8 @@ If mx>590 Then
 	'If tdark=1 Then glenable gl_lighting
 Else
 	o22=0:o33=0:z22=0
-EndIf 	
+EndIf
+   glcolor4f(1,1,1,1)
 	drawsunsetwater()
 	
 	'drawshadows()
