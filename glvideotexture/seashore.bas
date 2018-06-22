@@ -800,7 +800,8 @@ For i=-n30 To n30
 	Var sc=scale2*1.5
 	Var ky=sc*17.8*2*2
 	dzz0=dz0
-	dz0=-Abs(i*1.9)-90/max(9.0,115-mx)
+	dz0=-Abs(i*1.9)-90/max(9.0,110-max(0.0,mx)-mz-mz)
+	'dz0=-Abs(i*1.9)-90/max(9.0,115-mx)
    glTranslatef (100+ddx,ky*(i/2+Int(my/ky-0.5)),0)
    If ((i+200) Mod 2)=1 Then
    	glscalef(-1,-1,1)
@@ -1569,10 +1570,10 @@ If mx<1200 Or mz>8 Then
 	glpushmatrix
 	gltranslatef(dmmx,0,0) 
 	drawsea0()
-	If mx>150 Then
+	If mx>150 Or mz>15 Then
 		drawsea0(70)
 	EndIf 	
-   If mx>220 Then
+   If mx>220 Or mz>30 Then
 	   drawsea0(140)
    EndIf 	
 	glpopmatrix
