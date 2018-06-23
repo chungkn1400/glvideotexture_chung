@@ -3157,18 +3157,18 @@ Sub drawcloud(ByVal i As Integer)
 	      glpushmatrix
 	      gltranslatef(cloudx(i),cloudy(i),cloudz(i))	      
 	      'glbindtexture(gl_texture_2d,cloudtext)
-	      Var cc=1.0
+	      Var cc=1.0,k9000=9000.0
 	      If mz>100 Then
-	      	cc=min(1.0,max(0.45,0.45*9000/(4500+Abs(cloudx(i)-mx)+Abs(cloudy(i)-my)+Abs(cloudz(i)-mz))))
+	      	cc=min(1.0,max(0.45,0.45*k9000/(4500+Abs(cloudx(i)-mx)+Abs(cloudy(i)-my)+Abs(cloudz(i)-mz))))
 	      Else 
-	      	cc=min(1.0,max(0.45,0.45*9000/(4500+Abs(cloudx(i)-mx)+Abs(cloudy(i)-my))))
+	      	cc=min(1.0,max(0.45,0.45*k9000/(4500+Abs(cloudx(i)-mx)+Abs(cloudy(i)-my))))
 	      EndIf
 	      glcolor3f(cc,cc,cc)
-	      If cc>0.6 And i<=ncloud22 Then
+	      'If cc>0.6 And i<=ncloud22 Then
 	      	'If Rnd<0.003*0.03*whumidity*kfps Then
 	      	'	If (rain<90 Or Rnd<0.01*kfps) Then krain=15:rain=0
 	      	'EndIf
-	      EndIf
+	      'EndIf
          glrotatef(o1,0,0,1)
 	      glrotatef(-o2,0,1,0)
 	      gltexcarre3(cloudr(i)*1.5,cloudr(i))
@@ -3240,6 +3240,7 @@ Sub drawcloudshadow(ByVal i As Integer)
 		rotavion(xx-mx,yy-my,zz-mz)
 		if x2>(0.9*max(y2,z2)-size-4000) Then
 	      Var cc=0.4
+	      'cc=1
       	'cc*=min(1.0,max(0.001,0.25*9000/(1000+Abs(xx-mx)+Abs(yy-my))))
       	'cc*=min(1.0,max(0.001,(mz-zz)*Abs(x2)*0.002*0.002))
 	      glcolor4f(cc,cc,cc,cc)
@@ -3249,7 +3250,8 @@ Sub drawcloudshadow(ByVal i As Integer)
 	      'If xx>100-cloudr(i) Then zz=26
 	      gltranslatef(xx,yy,zz)'clouddz(i)+zz+max(2.0,(mz-zz)*0.03))	      
 	      'glbindtexture(gl_texture_2d,cloudtext)
-         glrotatef(cloudshadowdo1(i),0,0,1)
+         'glrotatef(cloudshadowdo1(i),0,0,1)
+         glrotatef(o1,0,0,1)
 	      glrotatef(-90,0,1,0)
 	      'glrotatef(cloudshadowdo2(i)-90,0,1,0)
 	      'glrotatef(cloudshadowdo3(i),1,0,0)
