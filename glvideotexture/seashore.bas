@@ -201,6 +201,10 @@ Else
 	mousedown=1
 EndIf       
 End Sub
+Sub subrightmouse
+Sleep 200	
+guisetfocus("win.graph2")	
+End Sub
 Declare Sub resetbikini()
 Dim Shared As Single mx,my,mz,yh,dmx,dmy,dmz
 Dim Shared As Single o1,o2,o3,cos1=1,sin1,cos2=1,sin2,cos3=1,sin3,o22,o33,z22
@@ -223,6 +227,7 @@ msg+=crlf+"C => canoe on/off"
 msg+=crlf+"Z,S => fly up/down"
 msg+=crlf+"F1 => help"
 msg+=crlf+"F3 => change time"
+msg+=crlf+"ctrl+C => number of clouds"
 guinotice msg
 time0=timer
 End Sub
@@ -230,6 +235,44 @@ Dim Shared As Integer tcanoe
 Sub subcanoe
 tcanoe=(tcanoe+1)Mod 2
 Sleep 200
+guisetfocus("win.graph2")
+End Sub
+dim shared as string msg 
+Sub subresp
+resp=guigettext("win2.resp")
+End Sub
+Sub prompt(ByRef msg0 As String,ByRef resp0 As String)
+Dim As Integer x400 
+x400=max2(400,Len(msg0)*10)
+statictext("win2.msg","msg",10,10,x400,40)
+edittext("win2.resp","",@subresp,10,60,x400,20)
+openwindow("win2","freewebcar_chung",50,50,x400+50,180)
+printgui("win2.msg",msg0)
+printgui("win2.resp",resp0)
+guisetfocus("win2.resp")
+While guitestkey(vk_escape)=0 And guitestkey(vk_return)=0
+	guiscan
+	Sleep 100
+Wend
+Sleep 100
+guiscan
+resp=guigettext("win2.resp")
+guiclosewindow("win2")
+Sleep 200
+guiscan 
+End Sub
+Const As Integer ncloud=200
+Sub subncloud
+Dim As Integer i  	
+Dim As Integer x,y
+	resp=Str(ncloud2)
+	msg="number of clouds : enter a number (50.."+Str(ncloud)+")  last="+Str(ncloud2)
+	prompt(msg,resp)
+	i=Val(resp)
+	i=max2(50,min2(ncloud,i))
+	If i<>ncloud2 Then
+		ncloud2=i
+	EndIf
 guisetfocus("win.graph2")
 End Sub
 Sub initsounds()
@@ -244,12 +287,16 @@ Sub initsounds()
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias waterwave",0,0,0)
    soundfic="sounds/seagull.mp3"
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias seagull",0,0,0)
+   soundfic="sounds/windlong.mp3"
+   mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias wind",0,0,0)
    mcisendstring("play hello from 0",0,0,0)
    mcisendstring("play ocean from 0 repeat",0,0,0)
    mcisendstring("play nature from 0 repeat",0,0,0)
+   mcisendstring("play wind from 100 repeat",0,0,0)
 	mcisendstring("setaudio nature volume to "+Str(Int(10)),0,0,0)
 	mcisendstring("setaudio waterwave volume to "+Str(Int(400)),0,0,0)
 	mcisendstring("setaudio seagull volume to "+Str(Int(180)),0,0,0)
+	mcisendstring("setaudio wind volume to "+Str(Int(110)),0,0,0)
 End Sub
 Sub closesounds()
    mcisendstring("close hello",0,0,0)
@@ -257,6 +304,7 @@ Sub closesounds()
    mcisendstring("close nature",0,0,0)
 	mcisendstring("close waterwave",0,0,0)
 	mcisendstring("close seagull",0,0,0)
+	mcisendstring("close wind",0,0,0)
    mcisendstring("close all",0,0,0)
 End Sub
 Dim Shared As Single twater 
@@ -301,6 +349,8 @@ sear=1:seag=1:seab=1
 If Not Eof(file) Then Line Input #file,ficin:sear=Val(ficin)
 If Not Eof(file) Then Line Input #file,ficin:seag=Val(ficin)
 If Not Eof(file) Then Line Input #file,ficin:seab=Val(ficin)
+ncloud2=150
+If Not Eof(file) Then Line Input #file,ficin:ncloud2=Val(ficin)
 Close #file
 
 Dim Shared As Integer wx,wy,depth
@@ -331,6 +381,7 @@ trapclose("win",@mysubquit)
 trapLeftmouse("win.graph2",@subleftmouse)
 trapLeftmouseup("win.graph2",@subleftmouseup)
 trapmovemouse("win.graph2",@submovemouse)
+trapRightmouse("win.graph2",@subrightmouse)
 
 addcombo("win.scale2","scale0.4")
 addcombo("win.scale2","scale0.6")
@@ -548,7 +599,8 @@ While quit=0 And guitestkey(vk_escape)=0
     If guitestkey(vk_numpad5) Then o2=0
     If guitestkey(vk_left) Or guitestkey(vk_numpad1) Or mouseleft And tmm Then o1+=3*kfps
     If guitestkey(vk_right) Or guitestkey(vk_numpad3) Or mouseright And tmm Then o1-=3*kfps
-    If guitestkey(vk_c) Then subcanoe():Sleep 200
+    If guitestkey(vk_c) And guitestkey(vk_control)=0 Then subcanoe():Sleep 200
+    If guitestkey(vk_c) And guitestkey(vk_control) Then subncloud():Sleep 200
     If (guitestkey(vk_up) Or mouseforward And tmm)Or trun=1 Then
     	 Var kkfps=kfps:If mx>100 Then kkfps*=0.3
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
@@ -604,6 +656,7 @@ Print #file,canoeo1
 Print #file,sear
 Print #file,seag
 Print #file,seab
+Print #file,ncloud2
 Close #file	
 
 Sleep 1000
@@ -3085,7 +3138,6 @@ Sub drawcabaneshadowtext()
   glcopyTexSubImage2D(GL_TEXTURE_2D, 0, 0,0, 0,0,512,512)   
 End Sub
 Dim Shared As uint cloudtext  
-Const As Integer ncloud=200
 Dim Shared As Single cloudx(ncloud),cloudy(ncloud),cloudz(ncloud),cloudr(ncloud)
 Dim Shared As Single distcloud=50000/1.3'1.5
 Sub initcloud
@@ -3133,7 +3185,7 @@ If cloudtext=0 Then
 	initcloud()	
 EndIf
 'krain=0.1
-ncloud2=min2(ncloud,150)
+ncloud2=min2(ncloud,ncloud2)
 ncloud22=ncloud2'min2(ncloud2,Int(ncloud2*krain0))
 If ncloud2>0 Then
 If tdark=1 Then
