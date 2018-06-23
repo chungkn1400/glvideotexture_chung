@@ -1746,7 +1746,9 @@ Sub setksoleil
      Var sb=b
      sb=0
      tdark=0
-     If heure>20+1.9 Or heure<5.9 Then
+     Var mois=Val(Left(Date,2))
+     Var dh=1.5/(1+Abs(7-mois)) 
+     If heure>20+dh Or heure<5.9-dh Then
      	  tdark=1
      	  a=0.01:b=0.35:c=b
      EndIf
@@ -1941,8 +1943,10 @@ setksoleil()
 Var ksoleil1=ksoleil
 Var heure00=14.0,heure6=6.0,heure20=20.0
 tdark=0
-If heure<6 Or heure>20 Then
-	tdark=1
+Var mois=Val(Left(Date,2))
+Var dh=1.5/(1+Abs(7-mois)) 
+If heure>20+dh Or heure<5.9-dh Then
+  tdark=1
 EndIf
 'If heure>heure6 And heure<heure6+1 Then ksoleil1*=0.4+0.6*(heure-heure6)
 If heure>heure6 And heure<heure6+1 Then ksoleil1*=0.65+0.35*(heure-heure6)
@@ -2060,7 +2064,7 @@ EndIf
       If Abs(treex(i)-mx)+Abs(treey(i)-my)<300 Then tshowtree(i)=1 	
       If treex(i)<0 Then  
        rotavion2(treex(i)-mx,treey(i)-my)
-       If x2<0.9*Abs(y2) Then Continue For
+       If x2<0.9*Abs(y2)-160*suntan2 Then Continue For
        tshowtree(i)=1 	
        Select Case treetype(i)
       	Case 0:glbindtexture(GL_TEXTURE_2D,treetext)
