@@ -1503,7 +1503,8 @@ Declare Sub drawsunsetwater()
 Declare Sub drawskydome(rx As Single,ix0 As Integer,iy0 As Integer)
 Declare Sub drawseagull()
 Declare Sub drawclouds() 
-Declare Sub drawcloudshadows() 
+Declare Sub drawcloudshadows()
+Declare Sub drawgrass() 
 Sub drawshadows()
 gldisable gl_depth_test 
 glenable gl_texture_2D
@@ -1660,6 +1661,7 @@ EndIf
    drawcloudshadows()
 	drawtrees()
 	drawbushs()
+	drawgrass()
    
    'glenable gl_lighting
 	drawrocs()
@@ -2565,7 +2567,6 @@ If tcanoe=0 Then
  'EndIf
  'avgcolor=max(mycolor*0.8,min(avgcolor,mycolor))
  If mycolor>avgcolor*1.25 Then
- 	 auxvar+=1
     'canoeo2+=(4-canoeo2)*min(0.9,0.1715*kfps)
     soundwaterwave()
  EndIf
@@ -3317,6 +3318,120 @@ glEnable GL_DEPTH_TEST
 'gldisable gl_cull_face	
 'gldisable gl_alpha_test
 EndIf 
+End Sub
+Const As Integer ngrass=2500
+Dim Shared As Single distgrass=350,waterz=-1
+Dim Shared As uint grasslist,grasstext
+Dim Shared As Single grassx(ngrass),grassy(ngrass),grassz(ngrass),grassrot(ngrass),grassrot0(ngrass)
+Dim Shared As Single grassscalex(ngrass),grassscalez(ngrass),grasstype(ngrass),grasstx(ngrass)
+Dim Shared As Single grasswind,grasswindo1,grassscalez2(ngrass)
+Declare Function gettestroad(x As Single,y As Single)As Integer
+'Declare Function gettestroadtree(x As Single,y As Single)As Integer
+'Declare Function gettestnear0road(x As Single,y As Single,layer As Integer=0,inear0 As Integer=0)As Integer
+Sub initgrass
+Dim As Integer i,j  	
+Dim As Integer ix,iy,x,y
+Dim As Single aux
+   Randomize(0)
+	'distgrass=500
+	Var k=15
+ 	For i=1 To ngrass
+ 	  If (i Mod (ngrass\k))=1 Then
+ 	  	 x=(Rnd-0.5)*distgrass
+ 	  	 y=(Rnd-0.5)*distgrass
+ 	  EndIf
+	  grasstype(i)=Int(Rnd*1.19)+1	
+     grassx(i)=x+(Rnd-0.5)*distgrass*0.9
+     grassy(i)=y+(Rnd-0.5)*distgrass*0.9
+     grassz(i)=0'getterrainheight(grassx(i),grassy(i))
+     grassrot(i)=Rnd*180 
+     grassscalex(i)=1+Rnd*0.15
+     grassscalez(i)=(1+Rnd*0.3)*1.15'1.25
+     grasstx(i)=rnd
+     grassrot0(i)=grassrot(i)		
+     aux=1'-terraincolor(ix,iy).x
+     grassscalez2(i)=1.6*aux*grassscalez(i)
+ 	Next
+ 	Randomize()
+End Sub 
+Sub drawgrass
+Dim As Integer i  	
+Dim As Integer changegrass,ix,iy
+Dim As Single x=30,y=20,tx=1,x0,x1,dtx=0.8,grasso1,aux
+If grasstext=0 Then
+	grasstext=guiloadtexture(ExePath+"/objects/grassobj.jpg",250)
+   grasslist=loadlist(ExePath+"/objects/grassobj.3ds",7)
+	initgrass()
+EndIf
+x1=x*0.5:x0=0-x1
+    If Rnd<0.15*kfps Then
+    	grasswind+=(Rnd-0.5)*2.5
+    	grasswind=max(-10.0,min(10.0,grasswind))
+    	grasswindo1+=(Rnd-0.5)*30
+    	While grasswindo1<-180:grasswindo1+=360:Wend
+    	While grasswindo1>180:grasswindo1-=360:Wend
+    Else
+    	grasswind=(1-min(0.8,0.15*kfps))*grasswind+1e-10
+    EndIf
+    glcolor4f(0.65,0.9,0.65,1)
+    glenable gl_alpha_test
+    glAlphaFunc(gl_less,25/254)
+    glbindtexture(gl_texture_2d,grasstext)	
+    For i=1 To ngrass
+     changegrass=0'tupdategrass	
+     While grassx(i)<mx-distgrass :grassx(i)+=distgrass*2:changegrass=1:Wend 
+     While grassx(i)>mx+distgrass :grassx(i)-=distgrass*2:changegrass=1:Wend 	
+     While grassy(i)<my-distgrass :grassy(i)+=distgrass*2:changegrass=1:Wend 
+     While grassy(i)>my+distgrass :grassy(i)-=distgrass*2:changegrass=1:Wend 
+     If changegrass=1 Then
+     	 If grassx(i)>-250 Then 
+     	 	grassz(i)=waterz-1
+     	 Else
+     	 	grassz(i)=0
+     	 EndIf
+     	 'Var scalex=500
+       'ix=Int(grassx(i)/scalex+10000)-10000
+       'iy=Int(grassy(i)/scalex+10000)-10000
+       'ix=max2(0,min2(512,ix))
+       'iy=max2(0,min2(512,iy))
+       aux=1'-terraincolor(ix,iy).x
+       'grassscalez2(i)=1.6*aux*grassscalez(i)
+       grassscalez2(i)=0.95*aux*grassscalez(i)
+     EndIf
+ If grassx(i)<-340 Then'grassz(i)>waterz  Then 
+  'rotavion2(grassx(i)-mx,grassy(i)-my)
+  rotavion(grassx(i)-mx,grassy(i)-my,grassz(i)-mz)
+  If x2>(max(Abs(y2),Abs(z2))-80) Then 	
+     glpushmatrix
+     gltranslatef(grassx(i),grassy(i),grassz(i))
+     glrotatef(grassrot(i),0,0,1)
+     grasso1=grassrot(i)-grasswindo1+(Abs(grassx(i)-mx)+Abs(grassy(i)-my))*0.18
+     While grasso1<-180:grasso1+=360:Wend
+     While grasso1>180:grasso1-=360:Wend
+     If grasso1>0 Then 
+       glrotatef(grasswind,0,1,0)
+     Else 
+       glrotatef(-grasswind,0,1,0)
+     EndIf
+     glscalef(grassscalex(i),grassscalex(i),grassscalez2(i)) 
+	/'  tx=grasstx(i)
+	glbegin(gl_quads)
+	glTexCoord2f(tx,0)
+	glvertex3f(0,x0,0)
+	gltexcoord2f(tx+dtx,0)
+	glvertex3f(0,x1,0)
+	glTexCoord2f(tx+dtx,1)
+	glvertex3f(0,x1,y)
+	gltexcoord2f(tx,1)
+	glvertex3f(0,x0,y)
+	glend()'/
+	  glcalllist(grasslist)
+     glpopmatrix
+  EndIf
+ EndIf  
+    Next i 
+    glcolor4f(1,1,1,1)
+    gldisable gl_alpha_test
 End Sub
 
 
