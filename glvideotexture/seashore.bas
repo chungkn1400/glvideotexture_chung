@@ -266,10 +266,10 @@ Sub subncloud
 Dim As Integer i  	
 Dim As Integer x,y
 	resp=Str(ncloud2)
-	msg="number of clouds : enter a number (50.."+Str(ncloud)+")  last="+Str(ncloud2)
+	msg="number of clouds : enter a number (10.."+Str(ncloud)+")  last="+Str(ncloud2)
 	prompt(msg,resp)
 	i=Val(resp)
-	i=max2(50,min2(ncloud,i))
+	i=max2(10,min2(ncloud,i))
 	If i<>ncloud2 Then
 		ncloud2=i
 	EndIf
@@ -489,7 +489,8 @@ iimage0=iimage
 For i=0 To 11
 	If mygltext(i)<>0 Then guideletetexture(mygltext(i))
 	'mygltext(i)=guiloadtexture(ExePath+"/media/image"+nimage+"/glvideo"+Str(i)+".jpg")
-	mygltext(i)=guiloadtexture(ExePath+"/media/seashore/glvideo"+Str(i)+".jpg",200,230,5)
+	'mygltext(i)=guiloadtexture(ExePath+"/media/seashore/glvideo"+Str(i)+".jpg",200,230,5)
+	mygltext(i)=guiloadtexture(ExePath+"/media/seashore/glvideo"+Str(i)+".jpg",200,230,7)
    guiscan
    printgui("win.msg","load texture "+Str(i))
    Sleep 100
@@ -601,8 +602,13 @@ While quit=0 And guitestkey(vk_escape)=0
     If guitestkey(vk_right) Or guitestkey(vk_numpad3) Or mouseright And tmm Then o1-=3*kfps
     If guitestkey(vk_c) And guitestkey(vk_control)=0 Then subcanoe():Sleep 200
     If guitestkey(vk_c) And guitestkey(vk_control) Then subncloud():Sleep 200
-    If (guitestkey(vk_up) Or mouseforward And tmm)Or trun=1 Then
+    If (guitestkey(vk_up) Or mouseforward And tmm) Then
     	 Var kkfps=kfps:If mx>100 Then kkfps*=0.3
+    	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
+    	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
+    EndIf
+    If trun=1 Then
+    	 Var kkfps=kfps:If mx>100 Then kkfps*=0.2
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
     	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
     EndIf
@@ -2550,7 +2556,20 @@ If canoetext=0 Then
 EndIf
 If tcanoe=0 Then
 	drawcanoe0
-	trun=0:Exit Sub  
+	trun=0
+ Var mycolor=(winpixr+winpixg+winpixb)*0.33+10
+ 'If avgcolor<mycolor Then
+ 	avgcolor+=(mycolor-avgcolor)*min(0.9,0.05*kfps)
+ 'Else 
+ '	avgcolor+=(mycolor-avgcolor)*min(0.9,0.05*kfps)
+ 'EndIf
+ 'avgcolor=max(mycolor*0.8,min(avgcolor,mycolor))
+ If mycolor>avgcolor*1.25 Then
+ 	 auxvar+=1
+    'canoeo2+=(4-canoeo2)*min(0.9,0.1715*kfps)
+    soundwaterwave()
+ EndIf
+ Exit Sub  
 EndIf
 canoex=mx:canoey=my:canoez=max(mz-mz+18.5,collidez+3)
 If mx<100 Then
@@ -2563,14 +2582,15 @@ Else
  'canoeo2+=(Cos(-tt*3)*4-canoeo2)*min(0.9,0.3*kfps)
  canoeo2+=(Cos(-tt*3)*2-canoeo2)*min(0.9,0.3*kfps)
  Var mycolor=(winpixr+winpixg+winpixb)*0.33+10
- If avgcolor<mycolor Then
+ 'If avgcolor<mycolor Then
  	avgcolor+=(mycolor-avgcolor)*min(0.9,0.05*kfps)
- Else 
- 	avgcolor+=(mycolor-avgcolor)*min(0.9,0.08*kfps)
- EndIf
+ 'Else 
+ '	avgcolor+=(mycolor-avgcolor)*min(0.9,0.08*kfps)
+ 'EndIf
  'avgcolor=max(mycolor*0.8,min(avgcolor,mycolor))
- If mycolor>avgcolor*1.1523 Then
+ If mycolor>avgcolor*1.19 Then'1.1523 Then
     canoeo2+=(4-canoeo2)*min(0.9,0.1715*kfps)
+    soundwaterwave()
  EndIf
  If guitestkey(vk_up) Then 
  	canoeo2+=(Cos(-tt*5.5)*6.5-canoeo2)*min(0.9,0.3*kfps)
@@ -3151,7 +3171,7 @@ Randomize(Int(Timer/1000))
 For i=1 To ncloud
 	cloudx(i)=(Rnd-0.5)*2*distcloud+mx
 	cloudy(i)=(Rnd-0.5)*2*distcloud+my
-	cloudz(i)=3000+1200*Rnd
+	cloudz(i)=(3000+1200*Rnd)
 	cloudr(i)=(1500+Rnd*1000)*2.6
 Next
 End Sub
@@ -3209,13 +3229,14 @@ glbindtexture(gl_texture_2d,cloudtext)
 glcolor4f(1,1,1,1)
 For i=1 To ncloud2
 	test=0
+	'cloudx(i)=mx+1000*i:cloudy(i)=my
 	cloudx(i)+=kfps*3
 	If cloudx(i)<mx-distcloud Then cloudx(i)+=1.999*distcloud:test=1
 	If cloudx(i)>mx+distcloud Then cloudx(i)-=1.999*distcloud:test=1
 	If cloudy(i)<my-distcloud Then cloudy(i)+=1.999*distcloud:test=1
 	If cloudy(i)>my+distcloud Then cloudy(i)-=1.999*distcloud:test=1
 	If test=1 Then
-		cloudz(i)=3000+1200*Rnd
+		cloudz(i)=(3000+1200*Rnd)
 	EndIf
 	drawcloud(i)
 Next
@@ -3226,17 +3247,17 @@ glDepthMask(GL_true)
 EndIf 
 'drawrain()
 End Sub
-Dim Shared As Single cloudshadowdo1(ncloud),cloudshadowdo2(ncloud),cloudshadowdo3(ncloud)
-Dim Shared As Single clouddz(ncloud),testcloud(11,11)
-Dim Shared As Double timecloudshadow
-Dim Shared As Integer tupdatecloudshadow
+'Dim Shared As Single cloudshadowdo1(ncloud),cloudshadowdo2(ncloud),cloudshadowdo3(ncloud)
+'Dim Shared As Single clouddz(ncloud),testcloud(11,11)
+'Dim Shared As Double timecloudshadow
+'Dim Shared As Integer tupdatecloudshadow
 Sub drawcloudshadow(ByVal i As Integer)
 	      If tdark<>0 Then Exit sub
 	      Var xx=cloudx(i)
 	      Var yy=cloudy(i)
 	      Var zz=max(0.0,cloudz(i))
-	      xx+=zz*sunco1*suntan2
-	      yy+=zz*sunsi1*suntan2
+	      xx+=zz*sunco1*suntan2*0.57
+	      yy+=zz*sunsi1*suntan2*0.57
 	      'if i=1 And auxtest>0.4 Then xx=mx:yy=my
 	      zz=3
 	      'If zz>mz-10 And mz<mzsol00+100 Then Exit Sub 

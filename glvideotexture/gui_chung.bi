@@ -2065,8 +2065,61 @@ If maxcolor<>255 Then
 	  EndIf
 	  picbits(i)=(k2 Shl 24) Or (pix And kpix)
    Next
+  ElseIf typealpha=6 Then 
+   ReDim As uint picbits2(1 To bmpx*bmpy)
+   Var iroad=-1,jroad=0,iroad2=0,iroad3=0,bmpx2=Int(bmpx\2+0.1),bmpx4=Int(bmpx\4+0.1)
+   For i=1 To min2(bmpx*bmpy,UBound(picbits))
+  	   iroad+=1
+  	   If iroad>=bmpx Then
+  	 	  iroad=0:jroad+=bmpx'1
+  	 	  iroad2=0:iroad3=0
+  	   EndIf
+  	   If (iroad+1) And 1 Then
+  	   	iroad2+=1
+  	   	If iroad2>=bmpx4 Then
+  	   		iroad3+=bmpx2
+  	   		iroad2=0
+  	   	EndIf
+    	   pix=picbits(i)
+   	   picbits2(jroad+iroad3+bmpx2-iroad2)=pix
+   	   picbits2(jroad+iroad3+iroad2)=pix
+   	EndIf    
+   Next i
+  	Var kpix=(255 Shl 16)+(255 Shl 8)+255
+  	Var kk=k/255
+   For i=1 To UBound(picbits)
+	  pix=picbits2(i)
+	  k2=(((pix And 255)+((pix Shr 8)And 255)+((pix Shr 16)And 255))\3)
+	  If k2>maxcolor Then
+	  	  k2=0
+	  Else
+	  	  k2=Int((maxcolor-k2)*kk)
+	  EndIf
+	  picbits(i)=(k2 Shl 24) Or (pix And kpix)
+   Next
+  ElseIf typealpha=7 Then 
+   Dim As Integer r,g,b
+  	Var kpix=(255 Shl 16)+(255 Shl 8)+255
+  	Var kk=k/255
+   For i=1 To UBound(picbits)
+	  pix=picbits(i)	  
+	  b=pix And 255:g=(pix Shr 8)And 255:r=(pix Shr 16)And 255
+	  Var ks=0.1
+	  r+=(255-r)*ks
+	  g+=(255-g)*ks
+	  b+=(255-b)*ks
+	  k2=(r+g+b)\3
+	  If k2>maxcolor Then
+	  	  k2=0
+	  Else
+	  	  k2=Int((maxcolor-k2)*kk)
+	  EndIf
+	  pix=(r Shl 16)+(g Shl 8)+b
+	  picbits(i)=(k2 Shl 24) Or (pix And kpix)
+   Next
   EndIf 	
   SetBitmapBits hbmp,bmpx*bmpy*4,@PicBits(1)
+  ReDim As uint picbits2(1)
 EndIf 
 glGenTextures(1, @itexture)
 'guinotice("texture="+Str(itexture),"ok")
