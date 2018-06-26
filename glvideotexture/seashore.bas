@@ -292,11 +292,11 @@ Sub initsounds()
    mcisendstring("play hello from 0",0,0,0)
    mcisendstring("play ocean from 0 repeat",0,0,0)
    mcisendstring("play nature from 0 repeat",0,0,0)
-   mcisendstring("play wind from 100 repeat",0,0,0)
+   'mcisendstring("play wind from 100 repeat",0,0,0)
 	mcisendstring("setaudio nature volume to "+Str(Int(10)),0,0,0)
 	mcisendstring("setaudio waterwave volume to "+Str(Int(400)),0,0,0)
-	mcisendstring("setaudio seagull volume to "+Str(Int(180)),0,0,0)
-	mcisendstring("setaudio wind volume to "+Str(Int(110)),0,0,0)
+	mcisendstring("setaudio seagull volume to "+Str(Int(120)),0,0,0)
+	mcisendstring("setaudio wind volume to "+Str(Int(160)),0,0,0)
 End Sub
 Sub closesounds()
    mcisendstring("close hello",0,0,0)
@@ -317,6 +317,19 @@ EndIf
 End Sub
 Sub soundseagull
 		mcisendstring("play seagull from 0",0,0,0)
+End Sub
+Dim Shared As Integer tsoundwind=0
+Sub soundwind
+	If tsoundwind=0 Then
+		tsoundwind=1
+		mcisendstring("play wind from 100 repeat",0,0,0)
+	EndIf
+End Sub
+Sub stopsoundwind
+	If tsoundwind=1 Then
+		tsoundwind=0
+		mcisendstring("stop wind",0,0,0)
+	EndIf
 End Sub
 initsounds()
 'soundseagull
@@ -489,8 +502,8 @@ iimage0=iimage
 For i=0 To 11
 	If mygltext(i)<>0 Then guideletetexture(mygltext(i))
 	'mygltext(i)=guiloadtexture(ExePath+"/media/image"+nimage+"/glvideo"+Str(i)+".jpg")
-	'mygltext(i)=guiloadtexture(ExePath+"/media/seashore/glvideo"+Str(i)+".jpg",200,230,5)
-	mygltext(i)=guiloadtexture(ExePath+"/media/seashore/glvideo"+Str(i)+".jpg",200,230,7)
+	mygltext(i)=guiloadtexture(ExePath+"/media/seashore/glvideo"+Str(i)+".jpg",200,230,5)
+	'mygltext(i)=guiloadtexture(ExePath+"/media/seashore/glvideo"+Str(i)+".jpg",200,230,7)
    guiscan
    printgui("win.msg","load texture "+Str(i))
    Sleep 100
@@ -1646,6 +1659,12 @@ If mx>590 Then
 Else
 	o22=0:o33=0:z22=0
 EndIf
+If mx>1200 Then
+	soundwind()
+Else
+	stopsoundwind()
+EndIf
+
    glcolor4f(1,1,1,1)
 	drawsunsetwater()
 	
@@ -3033,6 +3052,7 @@ If x2>0.9*max(Abs(y2),Abs(z2))-300 Then
 	Var x0=canoex+40*co1
 	Var y0=canoey+40*si1
 	Var z0=1
+	If canoex>100 Then z0=canoez
 	Var h=35.0
 	Var x1=x0+h*sunco1*suntan2
 	Var y1=y0+h*sunsi1*suntan2
@@ -3043,7 +3063,7 @@ If x2>0.9*max(Abs(y2),Abs(z2))-300 Then
    glenable gl_blend
    glblendfunc gl_zero,gl_one_minus_src_alpha
    glcolor4f(0.6,0.6,0.6,0.6) 
-   'gldisable gl_depth_test
+   gldisable gl_depth_test
    glDepthMask(GL_true)
   Var do1=canoeo1-suno1	
   Var dco1=Cos(do1*degtorad)
