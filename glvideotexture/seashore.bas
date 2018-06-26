@@ -285,6 +285,8 @@ Sub initsounds()
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias nature",0,0,0)
    soundfic="sounds/waterwave.mp3"
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias waterwave",0,0,0)
+   soundfic="sounds/waterwave2.mp3"
+   mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias waterwave2",0,0,0)
    soundfic="sounds/seagull.mp3"
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias seagull",0,0,0)
    soundfic="sounds/windlong.mp3"
@@ -295,6 +297,7 @@ Sub initsounds()
    'mcisendstring("play wind from 100 repeat",0,0,0)
 	mcisendstring("setaudio nature volume to "+Str(Int(10)),0,0,0)
 	mcisendstring("setaudio waterwave volume to "+Str(Int(400)),0,0,0)
+	mcisendstring("setaudio waterwave2 volume to "+Str(Int(200)),0,0,0)
 	mcisendstring("setaudio seagull volume to "+Str(Int(120)),0,0,0)
 	mcisendstring("setaudio wind volume to "+Str(Int(160)),0,0,0)
 End Sub
@@ -303,16 +306,24 @@ Sub closesounds()
    mcisendstring("close ocean",0,0,0)
    mcisendstring("close nature",0,0,0)
 	mcisendstring("close waterwave",0,0,0)
+	mcisendstring("close waterwave2",0,0,0)
 	mcisendstring("close seagull",0,0,0)
 	mcisendstring("close wind",0,0,0)
    mcisendstring("close all",0,0,0)
 End Sub
-Dim Shared As Single twater 
+Dim Shared As Single twater,twater2 
 Sub soundwaterwave
 If twater>Timer+999 Then twater=Timer 'if midnight
 If Timer>(twater+0.7) Then
   	twater=Timer
    mcisendstring("play waterwave from 0",0,0,0)
+EndIf 
+End Sub
+Sub soundwaterwave2
+If twater2>Timer+999 Then twater2=Timer 'if midnight
+If Timer>(twater2+1.7) Then
+  	twater2=Timer
+   mcisendstring("play waterwave2 from 0",0,0,0)
 EndIf 
 End Sub
 Sub soundseagull
@@ -2588,6 +2599,7 @@ If tcanoe=0 Then
  If mycolor>avgcolor*1.25 Then
     'canoeo2+=(4-canoeo2)*min(0.9,0.1715*kfps)
     soundwaterwave()
+    soundwaterwave2()
  EndIf
  Exit Sub  
 EndIf
@@ -3144,7 +3156,7 @@ glGetIntegerv( GL_VIEWPORT, @viewport(0) )
 winx = xmax/2
 winy = ymax/3.5
 If mx>100 Then
-	glReadPixels( winx,winy, 1, 1, GL_RGBA, GL_UNSIGNED_byte, @winpixZ )
+	glReadPixels( winx,Int(ymax/10), 1, 1, GL_RGBA, GL_UNSIGNED_byte, @winpixZ )
 	winpixa=(winpixz Shr 24)And 255
 	winpixb=(winpixz Shr 16)And 255
 	winpixg=(winpixz Shr 8)And 255
