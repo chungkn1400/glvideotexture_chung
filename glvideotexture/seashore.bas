@@ -225,6 +225,7 @@ msg+=crlf+"arrows => move"
 msg+=crlf+"pageup,down => look up/down"
 msg+=crlf+"C => canoe on/off"
 msg+=crlf+"Z,S => fly up/down"
+msg+=crlf+"S  => swim"
 msg+=crlf+"F1 => help"
 msg+=crlf+"F3 => change time"
 msg+=crlf+"ctrl+C => number of clouds"
@@ -291,6 +292,8 @@ Sub initsounds()
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias seagull",0,0,0)
    soundfic="sounds/windlong.mp3"
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias wind",0,0,0)
+   soundfic="sounds/subwater.mp3"
+   mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias subwater",0,0,0)
    mcisendstring("play hello from 0",0,0,0)
    mcisendstring("play ocean from 0 repeat",0,0,0)
    mcisendstring("play nature from 0 repeat",0,0,0)
@@ -300,6 +303,7 @@ Sub initsounds()
 	mcisendstring("setaudio waterwave2 volume to "+Str(Int(200)),0,0,0)
 	mcisendstring("setaudio seagull volume to "+Str(Int(120)),0,0,0)
 	mcisendstring("setaudio wind volume to "+Str(Int(160)),0,0,0)
+	mcisendstring("setaudio subwater volume to "+Str(Int(600)),0,0,0)
 End Sub
 Sub closesounds()
    mcisendstring("close hello",0,0,0)
@@ -309,12 +313,13 @@ Sub closesounds()
 	mcisendstring("close waterwave2",0,0,0)
 	mcisendstring("close seagull",0,0,0)
 	mcisendstring("close wind",0,0,0)
+	mcisendstring("close subwater",0,0,0)
    mcisendstring("close all",0,0,0)
 End Sub
-Dim Shared As Single twater,twater2 
-Sub soundwaterwave
+Dim Shared As Double twater,twater2,tsubwater 
+Sub soundwaterwave(dt As Double=0.7)
 If twater>Timer+999 Then twater=Timer 'if midnight
-If Timer>(twater+0.7) Then
+If Timer>(twater+dt) Then
   	twater=Timer
    mcisendstring("play waterwave from 0",0,0,0)
 EndIf 
@@ -324,6 +329,13 @@ If twater2>Timer+999 Then twater2=Timer 'if midnight
 If Timer>(twater2+1.7) Then
   	twater2=Timer
    mcisendstring("play waterwave2 from 0",0,0,0)
+EndIf 
+End Sub
+Sub soundsubwater(dt As Double=0.7)
+If tsubwater>Timer+999 Then tsubwater=Timer 'if midnight
+If Timer>(tsubwater+dt) Then
+  	tsubwater=Timer
+   mcisendstring("play subwater from 2500",0,0,0)
 EndIf 
 End Sub
 Sub soundseagull
@@ -581,11 +593,13 @@ Const As Single degtorad=ASin(1)/90
 Const As Single radtodeg=90/ASin(1)
 Dim Shared As Integer tactive,trun
 
-Dim Shared  As Single mx0,my0,mz0,o10
+Dim Shared As Single collidex,collidey,collidez,collidex2,collidey2,collidez2,tswim
+Dim Shared  As Single mx0,my0,mz0,o10,mz1
 Dim Shared As double time1,time2,dtime=0,fps=1,timemsg,kfps=1
 time0=Timer
 
 Randomize(0)
+mz=max(mz,0.0)
 
 While quit=0 And guitestkey(vk_escape)=0
 	guiscan
@@ -628,6 +642,7 @@ While quit=0 And guitestkey(vk_escape)=0
     If guitestkey(vk_c) And guitestkey(vk_control) Then subncloud():Sleep 200
     If (guitestkey(vk_up) Or mouseforward And tmm) Then
     	 Var kkfps=kfps:If mx>100 Then kkfps*=0.3
+    	 If tswim=1 Then kkfps*=0.3
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
     	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
     EndIf
@@ -640,9 +655,37 @@ While quit=0 And guitestkey(vk_escape)=0
     	 mx-=0.5*vv*cos1*kfps:my-=0.5*vv*sin1*kfps
     	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
     EndIf
-    If guitestkey(vk_z) Or guitestkey(vk_w) Then mz=min(150.0,mz+kfps*0.5)
-    If guitestkey(vk_s) Then mz=max(0.0,mz-kfps*0.5)
-   EndIf 
+    If guitestkey(vk_z) Or guitestkey(vk_w) Then
+    	If mz<-0.001 Then Sleep 350 
+    	mz=max(0.0,min(150.0,mz+kfps*0.5))
+    	mz1=0
+    EndIf
+    If guitestkey(vk_s) Then
+    	 mz1=max(-12.0,mz1-kfps*0.5)    	 
+    	 mz=max(-18.0,mz-kfps) 
+    	 If tswim=1 Then soundwaterwave()   	 
+    EndIf 
+   If tcanoe=0 Then  
+    Var cz=max(-3.0,collidez-12),dz=0.0
+    If mx>200 Then dz=Cos(time1*3.1416)*0.35
+  	 Var mzz=min(0.0,(max(-12.0,cz+mz1)))*max(0.0,cos1)+dz
+  	 If mx<110 Then mzz=0
+  	 If mx<110 Then mz1=0
+  	 Var x330=1200.0'400.0
+  	 If mx>x330 Then mzz=0
+  	 If guitestkey(vk_down) Then mzz=0':mz1=0
+  	 If guitestkey(vk_up) And tswim=1 And dz<0 Then soundsubwater(5)
+  	 If mz1<-0.01 And dz<0 And mx<x330 Then soundwaterwave(1.4)
+  	 tswim=0:If mz1<-0.01 And mx<x330 Then tswim=1
+  	 If mz<10 Then
+  	 	If cos1>0 Or mz>0 Then
+  	 	   mz=max(mzz,mz-0.2*kfps)
+  	 	Else 
+  	 	   mz=max(mzz,mz)
+  	 	EndIf 	
+  	 EndIf
+   EndIf
+  EndIf  
    If mx>100 Then
    	If Abs(mx-mx0)+Abs(my-my0)+Abs(mz-mz0)+Abs(o10-o1)>1 Then
    		mx0=mx:my0=my:mz0=mz:o10=o1
@@ -904,7 +947,9 @@ For i=-n30 To n30
 	Var dx=17.9
 	Var dxx=0.0
 	Var kcos=1.25*(1-cos1*0.25)
-	If mx>330 Then dxx=-dx*kcos
+	Var kcos2=1.0
+	If mx<270 Then kcos2=max(0.0,(5+cos1)/6)
+	If mx>330 Then dxx=-dx*kcos*kcos2
 	'Var sc=scale2*1.6
 	glscalef(sc,sc,1)
 	glbegin(gl_quads)
@@ -913,9 +958,9 @@ For i=-n30 To n30
 	gltexcoord2f(tx+dtx,ty)
 	glvertex3f(0,dx,-dxx)
 	glTexCoord2f(tx+dtx,ty+dty)
-	glvertex3f(dz,dx,dx+dx-Abs(dz*1.6)-7)
+	glvertex3f(dz,dx,(dx+dx-Abs(dz*1.6)-7)*kcos2)
 	gltexcoord2f(tx,ty+dty)
-	glvertex3f(dzz,-dx,dx+dx-Abs(dzz*1.6)-7)
+	glvertex3f(dzz,-dx,(dx+dx-Abs(dzz*1.6)-7)*kcos2)
 	glend()
 	If mx+ddx>270 Then dxx=-dx*0.5
 	If mx>330 Then dxx=-dx*1.1
@@ -926,9 +971,9 @@ For i=-n30 To n30
 	gltexcoord2f(tx+dtx,ty)
 	glvertex3f(0,dx-d7,-dxx)
 	glTexCoord2f(tx+dtx,ty+dty)
-	glvertex3f(dz*4,dx-d7,dx*1.4)
+	glvertex3f(dz*4,dx-d7,dx*1.4*kcos2)
 	gltexcoord2f(tx,ty+dty)
-	glvertex3f(dzz*4,-dx-d7,dx*1.4)
+	glvertex3f(dzz*4,-dx-d7,dx*1.4*kcos2)
 	glend()
 	If mx+ddx>270 Then dxx=-dx
 	If mx>330 Then dxx=-dx*1.2
@@ -938,9 +983,9 @@ For i=-n30 To n30
 	gltexcoord2f(tx+dtx,ty)
 	glvertex3f(dz*2,dx,-dxx)
 	glTexCoord2f(tx+dtx,ty+dty)
-	glvertex3f(dz*6,dx,dx*1.4)
+	glvertex3f(dz*6,dx,dx*1.4*kcos2)
 	gltexcoord2f(tx,ty+dty)
-	glvertex3f(dzz*6,-dx,dx*1.4)
+	glvertex3f(dzz*6,-dx,dx*1.4*kcos2)
 	glend()
 	glbegin(gl_quads)
 	glTexCoord2f(tx,ty)
@@ -948,9 +993,9 @@ For i=-n30 To n30
 	gltexcoord2f(tx+dtx,ty)
 	glvertex3f(dz*6,dx-d7,-dxx)
 	glTexCoord2f(tx+dtx,ty+dty)
-	glvertex3f(dz*10,dx-d7,dx*1.5)
+	glvertex3f(dz*10,dx-d7,dx*1.5*kcos2)
 	gltexcoord2f(tx,ty+dty)
-	glvertex3f(dzz*10,-dx-d7,dx*1.5)
+	glvertex3f(dzz*10,-dx-d7,dx*1.5*kcos2)
 	glend()
 	glpopmatrix
 Next i
@@ -2554,7 +2599,6 @@ EndIf
 	glDepthMask(GL_true)
 	gldisable gl_blend	
 End Sub
-Dim Shared As Single collidex,collidey,collidez,collidex2,collidey2,collidez2
 Dim Shared As uint canoetext,canoelist,canoeshadowtext,canoeshadowtext2
 Dim Shared As Integer tup
 Dim Shared As Double timeup
@@ -2603,12 +2647,13 @@ If tcanoe=0 Then
  EndIf
  Exit Sub  
 EndIf
-canoex=mx:canoey=my:canoez=max(mz-mz+18.5,collidez+3)
+canoex=mx:canoey=my:canoez=max(18.5,collidez+3)
 If mx<100 Then
-	canoez=mz+8
+	canoez=8
 	canoeo1=o1:canoeo2=0:canoeo3=0
 	trun=0
 Else 
+ mz=max(canoez-18.5,mz-0.5*kfps)	
  Var tt=Timer 
  canoeo1=o1+Cos(tt*2)*4
  'canoeo2+=(Cos(-tt*3)*4-canoeo2)*min(0.9,0.3*kfps)
@@ -2628,7 +2673,7 @@ Else
  	canoeo2+=(Cos(-tt*5.5)*6.5-canoeo2)*min(0.9,0.3*kfps)
  	If tup=0 Then
  		tup=1:timeup=tt
- 	ElseIf tt>timeup+1 Then
+ 	ElseIf tt>timeup+0.3 Then
  		trun=1
  	EndIf
  Else
@@ -3155,13 +3200,14 @@ glGetDoublev( GL_PROJECTION_MATRIX, @projection(0) )
 glGetIntegerv( GL_VIEWPORT, @viewport(0) )
 winx = xmax/2
 winy = ymax/3.5
+If mx>100 Then winy=ymax/20
 If mx>100 Then
 	glReadPixels( winx,Int(ymax/10), 1, 1, GL_RGBA, GL_UNSIGNED_byte, @winpixZ )
 	winpixa=(winpixz Shr 24)And 255
 	winpixb=(winpixz Shr 16)And 255
 	winpixg=(winpixz Shr 8)And 255
 	winpixr=(winpixz)And 255
-	Exit Sub 
+	'Exit Sub 
 EndIf
 glReadPixels( winx,winy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, @winZ )
 gluUnProject(winX,winY,winz,@modelview(0),@projection(0),@viewport(0),@posX,@posY,@posZ)   
@@ -3171,7 +3217,7 @@ gluUnProject(winX,winY,winz,@modelview(0),@projection(0),@viewport(0),@posX,@pos
 'glpopmatrix
 Var dist=((posx-mx)*cos1*cos2+(posy-my)*sin1*cos2+(posz-mz)*sin2)
 'Var dist=sqr((posx-mx)*(posx-mx)+(posy-my)*(posy-my)+(posz-mz)*(posz-mz))
-If dist<12 And dist>0 Then
+If dist<12 And dist>0 And mx<100 Then
 	mx-=5*cos1
 	my-=5*sin1
 EndIf
