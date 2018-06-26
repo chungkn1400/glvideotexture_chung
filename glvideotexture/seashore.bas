@@ -640,7 +640,7 @@ While quit=0 And guitestkey(vk_escape)=0
     If guitestkey(vk_right) Or guitestkey(vk_numpad3) Or mouseright And tmm Then o1-=3*kfps
     If guitestkey(vk_c) And guitestkey(vk_control)=0 Then subcanoe():Sleep 200
     If guitestkey(vk_c) And guitestkey(vk_control) Then subncloud():Sleep 200
-    If (guitestkey(vk_up) Or mouseforward And tmm) Then
+    If guitestkey(vk_up) Or (mouseforward And tmm) Then
     	 Var kkfps=kfps:If mx>100 Then kkfps*=0.3
     	 If tswim=1 Then kkfps*=0.3
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
@@ -667,9 +667,9 @@ While quit=0 And guitestkey(vk_escape)=0
     EndIf 
    If tcanoe=0 Then  
     Var cz=max(-3.0,collidez-12),dz=0.0
-    If mx>200 Then dz=Cos(time1*3.1416)*0.35
+    If mx>200 Then dz=Cos(time1*3.1416)*0.35-0.5
   	 Var mzz=min(0.0,(max(-12.0,cz+mz1)))*max(0.0,cos1)+dz
-  	 If mx<110 Then mzz=0
+  	 If mx<110 Or sin2<-0.4 Then mzz=0
   	 If mx<110 Then mz1=0
   	 Var x330=1200.0'400.0
   	 If mx>x330 Then mzz=0
@@ -2644,6 +2644,7 @@ If tcanoe=0 Then
     'canoeo2+=(4-canoeo2)*min(0.9,0.1715*kfps)
     soundwaterwave()
     soundwaterwave2()
+    If tswim=1 Then soundsubwater(2)
  EndIf
  Exit Sub  
 EndIf
@@ -3005,7 +3006,7 @@ EndIf
  	if Rnd<0.005*kfps Then initseagull()
  EndIf
  seagullz=max(mz+8+dist*0.15,min(mz+dist*0.3,seagullz))
- seagullz=min(400,seagullz)
+ seagullz=max(8.0,min(400,seagullz))
  glbindtexture(gl_texture_2d,seagulltext(Int(Timer*3.6)Mod 5))
  glenable gl_alpha_test
  glAlphaFunc(gl_less,20/254)
