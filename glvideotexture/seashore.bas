@@ -667,7 +667,7 @@ While quit=0 And guitestkey(vk_escape)=0
     EndIf 
    If tcanoe=0 Then  
     Var cz=max(-3.0,collidez-12),dz=0.0
-    If mx>200 Then dz=Cos(time1*3.1416)*0.35-0.5
+    If mx>200 Then dz=Cos(time1*3.1416)*0.35
   	 Var mzz=min(0.0,(max(-12.0,cz+mz1)))*max(0.0,cos1)+dz
   	 If mx<110 Or sin2<-0.4 Then mzz=0
   	 If mx<110 Then mz1=0
