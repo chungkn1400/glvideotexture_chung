@@ -34,6 +34,13 @@ getcomboindex("win.dy",i)
 dy=i-1
 Sleep 200
 End Sub
+Dim Shared As Double dt=1
+Sub subdt
+Dim As Integer i  
+getcomboindex("win.dt",i)
+dt=i*0.1
+Sleep 200
+End Sub
 Dim Shared As Integer tinitimage,iimage=1,iimage0=1
 Sub subimage
 Dim As Integer i  
@@ -91,6 +98,7 @@ combobox("win.image",@subimage,495,10,80,400)
 combobox("win.dx",@subdx,600,10,60,500)
 combobox("win.dy",@subdy,670,10,60,500)
 button("win.folder","folder image",@subfolder,745,10,100,23)
+combobox("win.dt",@subdt,855,10,60,500)
 graphicbox("win.graph2",2,35,xmax,ymax,"opengl")
 openwindow("win","glvideotest",4,4,xmax+10,70+ymax)
 
@@ -136,6 +144,12 @@ For i=1 To 31
 Next
 selectcomboindex("win.dy",1)
 subdy()
+
+For i=1 To 100
+	addcombo("win.dt","dt"+Left(Str(i*0.1+0.0001),3))
+Next
+selectcomboindex("win.dt",10)
+subdt()
 
 'setforegroundwindow(getguih("win"))
 guisetfocus("win.quit")
@@ -339,7 +353,7 @@ Dim As Integer i,j,k
 	
 	glloadidentity
 		 
-	dtime=time1-time0
+	dtime=(time1-time0)/dt
 	Dim As integer itexture=0
 	Dim As Single tx=0.0,ty=0.0,dtx=1.0,dty=1.0
 	setvideotexture(dtime,itexture,tx,ty,dtx,dty,dx,dy)
