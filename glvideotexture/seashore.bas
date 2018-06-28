@@ -594,7 +594,7 @@ Const As Single radtodeg=90/ASin(1)
 Dim Shared As Integer tactive,trun
 
 Dim Shared As Single collidex,collidey,collidez,collidex2,collidey2,collidez2,tswim
-Dim Shared  As Single mx0,my0,mz0,o10,mz1
+Dim Shared  As Single mx0,my0,mz0,o10,mz1,o20
 Dim Shared As double time1,time2,dtime=0,fps=1,timemsg,kfps=1
 time0=Timer
 
@@ -642,7 +642,7 @@ While quit=0 And guitestkey(vk_escape)=0
     If guitestkey(vk_c) And guitestkey(vk_control) Then subncloud():Sleep 200
     If guitestkey(vk_up) Or (mouseforward And tmm) Then
     	 Var kkfps=kfps:If mx>100 Then kkfps*=0.3
-    	 If tswim=1 Then kkfps*=0.3
+    	 If tswim=1 Then kkfps*=0.5
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
     	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
     EndIf
@@ -667,10 +667,12 @@ While quit=0 And guitestkey(vk_escape)=0
     EndIf 
    If tcanoe=0 Then  
     Var cz=max(-3.0,collidez-12),dz=0.0
-    If mx>200 Then dz=Cos(time1*3.1416)*0.35
-  	 Var mzz=min(0.0,(max(-12.0,cz+mz1)))*max(0.0,cos1)+dz
+    If mx>160 Then dz=Cos(time1*3.1416)*0.35
+    Var kcos1=cos1:If mx<250 Then kcos1=1
+  	 Var mzz=min(0.0,(max(-12.0,cz+mz1)))*max(0.0,kcos1)+dz
   	 If mx<110 Or sin2<-0.4 Then mzz=0
   	 If mx<110 Then mz1=0
+  	 If tcanoe=1 Then mzz=0:mz1=0
   	 Var x330=1200.0'400.0
   	 If mx>x330 Then mzz=0
   	 If guitestkey(vk_down) Then mzz=0':mz1=0
@@ -689,7 +691,12 @@ While quit=0 And guitestkey(vk_escape)=0
    If mx>100 Then
    	If Abs(mx-mx0)+Abs(my-my0)+Abs(mz-mz0)+Abs(o10-o1)>1 Then
    		mx0=mx:my0=my:mz0=mz:o10=o1
-   		soundwaterwave()
+   		If tcanoe=0 Then
+   			soundwaterwave()
+   		ElseIf canoeo2>o20+kfps*0.5 Then  
+   			soundwaterwave(1.5)
+   		EndIf
+   		o20=canoeo2
    	EndIf
    EndIf
 
@@ -1150,7 +1157,7 @@ Next
 End Sub
 Sub drawseawave(ByVal kblend as single=1)
 Dim As Integer i,j,k,ix,iy
-If mz>8 Then Exit Sub 
+If mz>10.1 Then Exit Sub 
 setwavez()
 If mx>1200 Then
 	o22+=(diro1(4,wavez(1,0)-wavez(0,0))-o22)*min(1.0,0.15*kfps) 
@@ -1661,6 +1668,7 @@ Dim As Integer i,j,k
 		 
    yh=28'50'28
    mx=max(-2400.0-2000,min(1800.0,mx))
+   mz=max(-15.0,min(200.0,mz))
    If mz>4 Then
    	o22=0:o33=0:z22=0
    EndIf
@@ -2649,12 +2657,16 @@ If tcanoe=0 Then
  Exit Sub  
 EndIf
 canoex=mx:canoey=my:canoez=max(18.5,collidez+3)
+If mx<1200 Then
+	canoez+=-7-1-sin2*3
+EndIf
 If mx<100 Then
 	canoez=8
 	canoeo1=o1:canoeo2=0:canoeo3=0
 	trun=0
-Else 
- mz=max(canoez-18.5,mz-0.5*kfps)	
+Else
+ canoez=min(canoez,mz+18.5)	
+ mz=min(8.0,max(canoez-18.5,mz-0.5*kfps))	
  Var tt=Timer 
  canoeo1=o1+Cos(tt*2)*4
  'canoeo2+=(Cos(-tt*3)*4-canoeo2)*min(0.9,0.3*kfps)
@@ -3225,7 +3237,9 @@ EndIf
 Var collidez0=collidez
 collidex=posx
 collidey=posy
-collidez=posz
+If max(Abs(collidex-mx),Abs(collidey-my))<30.0 Then
+	collidez=posz
+EndIf
 If collidez-collidez0<-1 And mx>100 Then
 	mx+=7*cos1
 	my+=7*sin1
