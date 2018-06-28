@@ -389,6 +389,7 @@ ncloud2=150
 If Not Eof(file) Then Line Input #file,ficin:ncloud2=Val(ficin)
 Close #file
 
+
 Dim Shared As Integer wx,wy,depth
 ScreenInfo wx,wy,depth
 
@@ -599,7 +600,7 @@ Dim Shared As double time1,time2,dtime=0,fps=1,timemsg,kfps=1
 time0=Timer
 
 Randomize(0)
-mz=max(mz,0.0)
+mz=max(mz,8.0)
 
 While quit=0 And guitestkey(vk_escape)=0
 	guiscan
@@ -1581,6 +1582,8 @@ Declare Sub drawseagull()
 Declare Sub drawclouds() 
 Declare Sub drawcloudshadows()
 Declare Sub drawgrass() 
+Declare Sub drawraindrops()
+Dim Shared As Double tdrawraindrops,dtraindrop=2
 Sub drawshadows()
 gldisable gl_depth_test 
 glenable gl_texture_2D
@@ -1761,6 +1764,7 @@ EndIf
    EndIf
 	
 	drawcanoe()
+	If Timer<tdrawraindrops+dtraindrop Then drawraindrops()
 	
    gldisable gl_lighting
    
@@ -2652,7 +2656,12 @@ If tcanoe=0 Then
     'canoeo2+=(4-canoeo2)*min(0.9,0.1715*kfps)
     soundwaterwave()
     soundwaterwave2()
-    If tswim=1 Then soundsubwater(2)
+    If tswim=1 Then
+    	soundsubwater(2)
+    	if mycolor>avgcolor*1.4 Then
+    		If tdrawraindrops+dtraindrop<Timer Then tdrawraindrops=Timer 
+    	EndIf
+    EndIf
  EndIf
  Exit Sub  
 EndIf
@@ -2665,7 +2674,7 @@ If mx<100 Then
 	canoeo1=o1:canoeo2=0:canoeo3=0
 	trun=0
 Else
- canoez=min(canoez,mz+18.5)	
+ If mz>-0.1 Then canoez=min(canoez,mz+18.5)	
  mz=min(8.0,max(canoez-18.5,mz-0.5*kfps))	
  Var tt=Timer 
  canoeo1=o1+Cos(tt*2)*4
@@ -3018,7 +3027,7 @@ EndIf
  	if Rnd<0.005*kfps Then initseagull()
  EndIf
  seagullz=max(mz+8+dist*0.15,min(mz+dist*0.3,seagullz))
- seagullz=max(8.0,min(400,seagullz))
+ seagullz=max(12.0,min(400,seagullz))
  glbindtexture(gl_texture_2d,seagulltext(Int(Timer*3.6)Mod 5))
  glenable gl_alpha_test
  glAlphaFunc(gl_less,20/254)
@@ -3036,6 +3045,40 @@ EndIf
  glpopmatrix
  gldisable gl_alpha_test
  glenable gl_depth_test 
+End Sub
+Dim Shared As uint raindroptext
+Sub drawraindrops()
+If raindroptext=0 Then
+	 raindroptext=guiloadtexture(ExePath+"/media/raindrops.jpg",150)	
+EndIf
+ glbindtexture(gl_texture_2d,raindroptext)
+ glenable gl_alpha_test
+ glAlphaFunc(gl_less,20/254)
+ gldisable gl_depth_test
+ glcolor4f(1,1,1,1)
+ glpushmatrix
+ glplacecursor(xmax*0.5,ymax*0.95,-39)
+ 'gltexcarre(40)
+ dtraindrop=2
+ Var kt=0.85*(tdrawraindrops+dtraindrop-Timer)/dtraindrop
+ Var dx=40.0,dy=20.0,tx=1.2,ty=0.5*2
+ dy*=kt:ty*=(kt+0.1)/1.1
+ kt=1+(1-kt)*0.2
+ dx*=kt
+ dy*=kt
+	glbegin(gl_quads)
+	glTexCoord2f(-tx,1-ty)
+	glvertex3f(-dx,-dy,0)
+	gltexcoord2f(tx,1-ty)
+	glvertex3f(dx,-dy,0)
+	glTexCoord2f(tx,1)
+	glvertex3f(dx,dy,0)
+	gltexcoord2f(-tx,1)
+	glvertex3f(-dx,dy,0)
+	glend()
+ glpopmatrix
+ gldisable gl_alpha_test
+ glenable gl_depth_test    
 End Sub
 Dim Shared As Single suno2,sunx,suny,sunz,scalesun=4
 Sub drawseagullshadow()
