@@ -109,7 +109,7 @@ trapLeftmouse("win.graph2",@subleftmouse)
 For i=1 To 30
 	addcombo("win.scale2","scale"+Left(Str(i*0.1+0.001),3))
 Next
-i=10
+i=12
 selectcomboindex("win.scale2",i)
 subscale2()
 'scale2=max(0.2,min(3.0,1+(i-4)*0.2))
@@ -132,13 +132,13 @@ subdx()
 For i=1 To 31
 	addcombo("win.dy","dy"+Str(i-1))
 Next
-selectcomboindex("win.dy",1)
+selectcomboindex("win.dy",5)
 subdy()
 
 For i=1 To 100
 	addcombo("win.dt","dt"+Left(Str(i*0.1+0.0001),3))
 Next
-selectcomboindex("win.dt",34)
+selectcomboindex("win.dt",30)
 subdt()
 
 'setforegroundwindow(getguih("win"))
@@ -198,25 +198,25 @@ iimage=ii
 iimage0=iimage
 For i=0 To 11
 	If mygltext(i)<>0 Then guideletetexture(mygltext(i))
-	mygltext(i)=guiloadtexture(ExePath+"/media/evie1/glvideo"+Str(i)+".jpg")
+	mygltext(i)=guiloadtexture(ExePath+"/media/evie2/glvideo"+Str(i)+".jpg")
    guiscan
    printgui("win.msg","load texture "+Str(i)+"  ")
    Sleep 100
 Next
 For i=0 To 11
 	If mygltext2(i)<>0 Then guideletetexture(mygltext2(i))
-	mygltext2(i)=guiloadtexture(ExePath+"/media/evie2/glvideo"+Str(i)+".jpg")
+	mygltext2(i)=guiloadtexture(ExePath+"/media/evie3/glvideo"+Str(i)+".jpg")
    guiscan
    printgui("win.msg","load texture2 "+Str(i)+"  ")
    Sleep 100
 Next
-For i=0 To 11
+/'For i=0 To 11
 	If mygltext3(i)<>0 Then guideletetexture(mygltext3(i))
 	mygltext3(i)=guiloadtexture(ExePath+"/media/evie3/glvideo"+Str(i)+".jpg")
    guiscan
    printgui("win.msg","load texture3 "+Str(i)+"  ")
    Sleep 100
-Next
+Next'/
 
 If skytext<>0 Then guideletetexture(skytext)
 skytext=guiloadtexture(ExePath+"/media/sky3.jpg")
@@ -245,7 +245,7 @@ While quit=0 And guitestkey(vk_escape)=0
 	fps+=(1.0/max(0.001,time1-time2)-fps)*0.2
 	If Timer>timemsg+0.2 Then
 		timemsg=Timer 
-		printguih(winmsg,"fps "+Str(Int(fps))+"   ")
+		printguih(winmsg,"fps "+Str(Int(fps))+"   t="+Str(Int(dtime*dt))+"   ")
 	EndIf
 
    display()
@@ -373,8 +373,8 @@ Dim As Integer i,j,k
 	glpopmatrix   
    
 	Var dtime2=(time1-time0)/dt
-	If dtime2>12*3 Then
-		dtime=12*3-(dtime2-12*3)
+	If dtime2>12*1.999 Then
+		dtime=12*1.999-(dtime2-12*1.999)
 		If dtime<0 Then time0=time1:dtime=0.0001
 	Else
 		dtime=dtime2
@@ -386,7 +386,7 @@ Dim As Integer i,j,k
 	Var itext=(Int(dtime/12+0.001))Mod 3
 	If itext=0 Then glbindtexture gl_texture_2D,mygltext(itexture)
 	If itext=1 Then glbindtexture gl_texture_2D,mygltext2(itexture)
-	If itext=2 Then glbindtexture gl_texture_2D,mygltext3(itexture)
+	'If itext=2 Then glbindtexture gl_texture_2D,mygltext3(itexture)
    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_linear)
    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_linear)'NEAREST)'nomipmap
 	glpushmatrix

@@ -8,16 +8,18 @@ Current=1
 Recompile=2
 Module=Module Build,fbc -c
 [TabOrder]
-TabOrder=1,2,3
+TabOrder=1,2,3,4
 [File]
 1=glevie.bas
 2=gui_chung.bi
 3=gl_chung.bi
+4=ico.rc
 [BreakPoint]
 1=
 2=
 3=
 [FileInfo]
-1=0,384,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+1=0,140,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 2=0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 3=0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+4=0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
