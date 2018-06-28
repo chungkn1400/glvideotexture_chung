@@ -77,13 +77,29 @@ Sub initsounds()
 	Dim As String soundfic
    soundfic="sounds/hello how are you.mp3"
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias hello",0,0,0)
+   soundfic="sounds/ocean.mp3"
+   mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias ocean",0,0,0)
+	mcisendstring("setaudio ocean volume to "+Str(Int(360)),0,0,0)
    mcisendstring("play hello from 0",0,0,0)
+   mcisendstring("play ocean from 0 repeat",0,0,0)
 End Sub
 Sub closesounds()
    mcisendstring("close hello",0,0,0)
+   mcisendstring("close ocean",0,0,0)
+   mcisendstring("close all",0,0,0)
 End Sub
 initsounds()
 
+Dim As String ficin
+Dim As String ficini="glevie.ini"
+file=FreeFile
+Open ficini For Input As #file
+scale2=1
+If Not Eof(file) Then Line Input #file,ficin:scale2=Val(ficin)
+dx=0:dy=0
+If Not Eof(file) Then Line Input #file,ficin:dx=Val(ficin)
+If Not Eof(file) Then Line Input #file,ficin:dy=Val(ficin)
+Close #file
 
 Dim Shared As Integer wx,wy,depth
 ScreenInfo wx,wy,depth
@@ -110,6 +126,7 @@ For i=1 To 30
 	addcombo("win.scale2","scale"+Left(Str(i*0.1+0.001),3))
 Next
 i=12
+i=Int(scale2/0.1+0.001)
 selectcomboindex("win.scale2",i)
 subscale2()
 'scale2=max(0.2,min(3.0,1+(i-4)*0.2))
@@ -126,13 +143,15 @@ subimage()
 For i=1 To 31
 	addcombo("win.dx","dx"+Str(i-1))
 Next
-selectcomboindex("win.dx",31)
+i=Int(dx+1.001)
+selectcomboindex("win.dx",i)
 subdx()
 
 For i=1 To 31
 	addcombo("win.dy","dy"+Str(i-1))
 Next
-selectcomboindex("win.dy",5)
+i=Int(dy+1.001)
+selectcomboindex("win.dy",i)
 subdy()
 
 For i=1 To 100
@@ -267,6 +286,12 @@ closesounds()
 
 guiclosewindow("win")
 Sleep 1000
+file=freefile
+Open ficini For Output As #file
+Print #file,scale2
+Print #file,dx
+Print #file,dy
+Close #file
 
 guiclose()
 guiquit()
