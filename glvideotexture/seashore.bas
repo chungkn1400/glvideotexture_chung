@@ -3222,15 +3222,21 @@ If dist<12 And dist>0 And mx<100 Then
 	mx-=5*cos1
 	my-=5*sin1
 EndIf
+Var collidez0=collidez
 collidex=posx
 collidey=posy
 collidez=posz
-/'winy = ymax/12
+If collidez-collidez0<-1 And mx>100 Then
+	mx+=7*cos1
+	my+=7*sin1
+EndIf
+/'winy = 2
 glReadPixels( winx,winy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, @winZ )
 gluUnProject(winX,winY,winz,@modelview(0),@projection(0),@viewport(0),@posX,@posY,@posZ)   
 collidex2=posx
 collidey2=posy
 collidez2=posz
+'collidez=min(collidez,collidez2)
 '/
 End Sub
 Sub drawcabaneshadowtext()	
