@@ -595,7 +595,7 @@ Const As Single radtodeg=90/ASin(1)
 Dim Shared As Integer tactive,trun
 
 Dim Shared As Single collidex,collidey,collidez,collidex2,collidey2,collidez2,tswim
-Dim Shared  As Single mx0,my0,mz0,o10,mz1,o20
+Dim Shared  As Single mx0,my0,mz0,o10,mz1,o20,mzsub
 Dim Shared As double time1,time2,dtime=0,fps=1,timemsg,kfps=1
 time0=Timer
 
@@ -641,14 +641,15 @@ While quit=0 And guitestkey(vk_escape)=0
     If guitestkey(vk_right) Or guitestkey(vk_numpad3) Or mouseright And tmm Then o1-=3*kfps
     If guitestkey(vk_c) And guitestkey(vk_control)=0 Then subcanoe():Sleep 200
     If guitestkey(vk_c) And guitestkey(vk_control) Then subncloud():Sleep 200
-    If guitestkey(vk_up) Or (mouseforward And tmm) Then
+    If (guitestkey(vk_up) Or (mouseforward And tmm))And trun=0 Then
     	 Var kkfps=kfps:If mx>100 Then kkfps*=0.3
-    	 If tswim=1 Then kkfps*=0.5
+    	 If tswim=1 Then kkfps*=0.40+0.3*Cos(time1)*Cos(time1)
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
     	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
     EndIf
     If trun=1 Then
     	 Var kkfps=kfps:If mx>100 Then kkfps*=0.2
+    	 If tswim=1 Then kkfps*=0.15+0.3*Cos(time1)*Cos(time1)
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
     	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
     EndIf
@@ -664,8 +665,12 @@ While quit=0 And guitestkey(vk_escape)=0
     If guitestkey(vk_s) Then
     	 mz1=max(-12.0,mz1-kfps*0.5)    	 
     	 mz=max(-18.0,mz-kfps) 
-    	 If tswim=1 Then soundwaterwave()   	 
-    EndIf 
+    	 If tswim=1 Then
+    	 	 mzsub=max(-1.0,mzsub-kfps) 
+          soundwaterwave()   	 
+    	 EndIf	 
+    EndIf
+    mzsub=min(0.0,mzsub+0.1*kfps)
    If tcanoe=0 Then  
     Var cz=max(-3.0,collidez-12),dz=0.0
     If mx>160 Then dz=Cos(time1*3.1416)*0.35
@@ -1681,7 +1686,7 @@ Dim As Integer i,j,k
    cos3=Cos((o3+o33)*degtorad):sin3=Sin((o3+o33)*degtorad)
    dmx=cos1*cos2:dmy=sin1*cos2:dmz=sin2
 	'glulookat(mx,my,mz+yh, mx+1000*dmx,my+1000*dmy,mz+1000*dmz+yh, 0,0,1)
-   glulookat(mx,my,mz+yh+z22+z23, mx+1000*dmx,my+1000*dmy,mz+1000*dmz+yh+z22+z23, -sin3*sin1*0.9985*cos2,sin3*cos1*0.9985*cos2,cos3)
+   glulookat(mx,my,mz+yh+z22+z23+mzsub, mx+1000*dmx,my+1000*dmy,mz+1000*dmz+yh+z22+z23+mzsub, -sin3*sin1*0.9985*cos2,sin3*cos1*0.9985*cos2,cos3)
 
 	'dtime=time1-time0
 	'itime=Int(dtime)Mod 12
@@ -2615,6 +2620,7 @@ Dim Shared As uint canoetext,canoelist,canoeshadowtext,canoeshadowtext2
 Dim Shared As Integer tup
 Dim Shared As Double timeup
 Dim Shared As uint winpixZ,winpixr,winpixg,winpixb,winpixa,avgcolor
+Dim Shared As uint winpixZ2,winpixr2,winpixg2,winpixb2,winpixa2,avgcolor2
 Sub drawcanoe0()
 glcolor3f(1,1,1)
 glbindtexture(GL_TEXTURE_2D,canoetext)
@@ -2644,7 +2650,19 @@ If canoetext=0 Then
 EndIf
 If tcanoe=0 Then
 	drawcanoe0
-	trun=0
+	If tswim=0 Then trun=0
+ Var tt=Timer 	
+ If guitestkey(vk_up) Then 
+ 	If tup=0 Then
+ 		tup=1:timeup=tt
+ 	ElseIf tt>timeup+0.3 Then
+ 		trun=1
+ 	EndIf
+ Else
+ 	If guitestkey(vk_down) Then trun=0
+ 	If tup=1 And tt<timeup+1 Then trun=0
+ 	tup=0
+ EndIf
  Var mycolor=(winpixr+winpixg+winpixb)*0.33+10
  'If avgcolor<mycolor Then
  	avgcolor+=(mycolor-avgcolor)*min(0.9,0.05*kfps)
@@ -2658,7 +2676,8 @@ If tcanoe=0 Then
     soundwaterwave2()
     If tswim=1 Then
     	soundsubwater(2)
-    	if mycolor>avgcolor*1.4 Then
+      'Var mycolor2=(winpixr2+winpixg2+winpixb2)*0.33+10
+    	if mycolor>avgcolor*1.35 Then'1.4 Then
     		If tdrawraindrops+dtraindrop<Timer Then tdrawraindrops=Timer 
     	EndIf
     EndIf
@@ -3027,7 +3046,7 @@ EndIf
  	if Rnd<0.005*kfps Then initseagull()
  EndIf
  seagullz=max(mz+8+dist*0.15,min(mz+dist*0.3,seagullz))
- seagullz=max(12.0,min(400,seagullz))
+ seagullz=max(25.0,min(400,seagullz))
  glbindtexture(gl_texture_2d,seagulltext(Int(Timer*3.6)Mod 5))
  glenable gl_alpha_test
  glAlphaFunc(gl_less,20/254)
@@ -3263,6 +3282,11 @@ If mx>100 Then
 	winpixb=(winpixz Shr 16)And 255
 	winpixg=(winpixz Shr 8)And 255
 	winpixr=(winpixz)And 255
+	/'glReadPixels( winx,Int(ymax/9), 1, 1, GL_RGBA, GL_UNSIGNED_byte, @winpixZ )
+	winpixa2=(winpixz Shr 24)And 255
+	winpixb2=(winpixz Shr 16)And 255
+	winpixg2=(winpixz Shr 8)And 255
+	winpixr2=(winpixz)And 255 '/
 	'Exit Sub 
 EndIf
 glReadPixels( winx,winy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, @winZ )
