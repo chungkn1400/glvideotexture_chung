@@ -244,6 +244,7 @@ Dim Shared As Integer tcanoe
 Dim Shared As Single canoex,canoey,canoez,canoeo1,canoeo2,canoeo3,shipx,shipy,shipz,shipo1,shipo2,shipo3
 Sub subcanoe
 tcanoe=(tcanoe+1)Mod 3
+If tcanoe=2 And mx<100 Then tcanoe=0
 shipo1=canoeo1
 shipo2=canoeo2
 shipo3=canoeo3
@@ -2649,7 +2650,7 @@ EndIf
 	glDepthMask(GL_true)
 	gldisable gl_blend	
 End Sub
-Dim Shared As Single windo1,windv=1,windo3,windprop,shipv,shipdo1,shipo10,shipoo1
+Dim Shared As Single windo1,windv=1,windo3,windprop,shipv,shipdo1,shipo10,shipoo1,shipdoo1
 Dim Shared As uint shiptext,shiplist,shipshadowtext,shipshadowtext2,shipbarretext,shipbarrelist
 Dim Shared As uint canoetext,canoelist,canoeshadowtext,canoeshadowtext2
 Dim Shared As Integer tup
@@ -2801,7 +2802,7 @@ EndIf
     		o1+=shipdo1*kfps*0.6
     		canoeo2=max(-45.0,min(45.0,canoeo2))
     		canoeo3=max(-45.0,min(45.0,canoeo3))
-    		shipo1+=(canoeo1+shipoo1-shipo1)*kfps*0.1
+    		shipo1+=(canoeo1-shipo1)*kfps*0.1
     		shipo2+=(canoeo2*0.75-shipo2)*kfps*0.1
     		shipo3+=(canoeo3*0.75-shipo3)*kfps*0.1
     		shipx+=(canoex-shipx)*min(0.9,kfps*0.31)
@@ -2854,16 +2855,16 @@ EndIf
     			gltranslatef(-14.55,0.1,4.7)
     		EndIf
     		If guitestkey(vk_left) Then
-    			shipoo1=min(200.0,shipoo1+kfps*10)
+    			shipdoo1=min(200.0,shipdoo1+kfps*10)
     		ElseIf guitestkey(vk_right) Then
-    			shipoo1=max(-200.0,shipoo1-kfps*10)
+    			shipdoo1=max(-200.0,shipdoo1-kfps*10)
     		Else
-    			shipoo1+=(0-shipoo1)*kfps*0.07
+    			shipdoo1+=(0-shipdoo1)*kfps*0.07
     		EndIf
     		If do1>0 Then
-    			glrotatef(shipoo1,1,0,0)
+    			glrotatef(shipdoo1+shipo3*2.5,1,0,0)
     		Else 
-    			glrotatef(-shipoo1,1,0,0)
+    			glrotatef(-shipdoo1-shipo3*2.5,1,0,0)
     		EndIf
     		glscalef(0.54,0.54,0.54)
     		glcalllist shipbarrelist
