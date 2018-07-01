@@ -198,9 +198,9 @@ If ii=0 Then
    EndIf 
    For i=0 To 11
 	  If mygltext(i)<>0 Then guideletetexture(mygltext(i))
-	  mygltext(i)=guiloadtexture(folderimage+"glvideo"+Str(i)+".jpg")
+	  mygltext(i)=guiloadtexture(folderimage+"glvideo"+Str(i)+".jpg",0,255)
      guiscan
-     printgui("win.msg","load texture "+Str(i))
+     printgui("win.msg","load texture0 "+Str(i))
      Sleep 100    
    Next i
    printgui("win.msg",Space(200))
@@ -217,14 +217,14 @@ iimage=ii
 iimage0=iimage
 For i=0 To 11
 	If mygltext(i)<>0 Then guideletetexture(mygltext(i))
-	mygltext(i)=guiloadtexture(ExePath+"/media/evie2/glvideo"+Str(i)+".jpg")
+	mygltext(i)=guiloadtexture(ExePath+"/media/evie2/glvideo"+Str(i)+".jpg",0,255)
    guiscan
    printgui("win.msg","load texture "+Str(i)+"  ")
    Sleep 100
 Next
 For i=0 To 11
 	If mygltext2(i)<>0 Then guideletetexture(mygltext2(i))
-	mygltext2(i)=guiloadtexture(ExePath+"/media/evie3/glvideo"+Str(i)+".jpg")
+	mygltext2(i)=guiloadtexture(ExePath+"/media/evie3/glvideo"+Str(i)+".jpg",0,255)
    guiscan
    printgui("win.msg","load texture2 "+Str(i)+"  ")
    Sleep 100
@@ -244,7 +244,9 @@ printgui("win.msg",Space(200))
 End Sub
 inittextures(1)'iimage)
 
-Dim Shared As double time0,time1,time2,dtime=0,fps=1,timemsg
+Dim Shared As double time0,time1,time2,dtime=0,fps=1,timemsg,dtime0,dtime1
+Dim Shared As Single tx0,ty0,dtx0,dty0
+dim shared as integer itexture0,dx0,dy0
 
 While quit=0 And guitestkey(vk_escape)=0
 	guiscan
@@ -407,7 +409,14 @@ Dim As Integer i,j,k
 	Dim As integer itexture=0
 	Dim As Single tx=0.0,ty=0.0,dtx=1.0,dty=1.0
 	setvideotexture(dtime,itexture,tx,ty,dtx,dty,dx,dy)
+	If Abs(tx-tx0)+Abs(ty-ty0)>0.001 Then
+		dtime1=dtime0
+		dtime0=dtime
+		itexture0=itexture
+		tx0=tx:ty0=ty:dtx0=dtx:dty0=dty:dx0=dx:dy0=dy
+	EndIf
 	glenable gl_texture_2D
+	gldisable gl_depth_test
 	Var itext=(Int(dtime/12+0.001))Mod 3
 	If itext=0 Then glbindtexture gl_texture_2D,mygltext(itexture)
 	If itext=1 Then glbindtexture gl_texture_2D,mygltext2(itexture)
@@ -431,6 +440,41 @@ Dim As Integer i,j,k
 	glvertex3f(-dx,dx,0)
 	glend()
 	glpopmatrix
+
+	If dtime1>0.01 Then
+	Var kdt=max(0.0,min(1.0,0.95*Abs(dtime-dtime0)/max(0.001,Abs(dtime0-dtime1)))) 
+	glenable gl_blend
+	glblendfunc gl_one_minus_src_alpha,gl_src_alpha
+	glcolor4f(1,1,1,kdt)
+	dtime=dtime0
+	itexture=itexture0
+	tx=tx0:ty=ty0:dtx=dtx0:dty=dty0:dx=dx0:dy=dy0
+	Var itext=(Int(dtime0/12+0.001))Mod 3
+	If itext=0 Then glbindtexture gl_texture_2D,mygltext(itexture)
+	If itext=1 Then glbindtexture gl_texture_2D,mygltext2(itexture)
+	'If itext=2 Then glbindtexture gl_texture_2D,mygltext3(itexture)
+   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_linear)
+   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_linear)'NEAREST)'nomipmap
+	glpushmatrix
+   glTranslatef (0,0,-70)
+   glrotatef(Cos(Timer*0.9)*5.5,0,1,0)
+	Var dx=25.0'17.9
+	Var sc=scale2
+	glscalef(sc,1,sc)
+	glbegin(gl_quads)
+	glTexCoord2f(tx,ty)
+	glvertex3f(-dx,-dx,0)
+	gltexcoord2f(tx+dtx,ty)
+	glvertex3f(dx,-dx,0)
+	glTexCoord2f(tx+dtx,ty+dty)
+	glvertex3f(dx,dx,0)
+	gltexcoord2f(tx,ty+dty)
+	glvertex3f(-dx,dx,0)
+	glend()
+	glpopmatrix
+	gldisable gl_blend
+	glcolor4f(1,1,1,1)
+	EndIf 
 	
 End Sub
 

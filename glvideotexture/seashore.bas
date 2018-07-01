@@ -18,6 +18,14 @@ Declare Function load3DSsize Cdecl Alias "load3DSsize" (Byval ficload As ZString
          Byval defauttext As ZString Ptr, ByVal size As uint) As Integer        
 Declare Function load3DSsizesmooth Cdecl Alias "load3DSsizesmooth" (Byval ficload As ZString Ptr,ByVal textlist As ZString Ptr,_ 
          Byval defauttext As ZString Ptr, ByVal size As uint) As Integer        
+#Inclib "./loadobj_chung"
+Declare Function loadobj Cdecl Alias "loadobj" (Byval ficload As ZString Ptr,ByVal textlist As ZString Ptr,_ 
+         Byval defauttext As ZString Ptr) As Integer        
+'call with autoresize desired size=integer 
+Declare Function loadobjsize Cdecl Alias "loadobjsize" (Byval ficload As ZString Ptr,ByVal textlist As ZString Ptr,_ 
+         Byval defauttext As ZString Ptr, ByVal size As uint) As Integer        
+Declare Function loadobjsizesmooth Cdecl Alias "loadobjsizesmooth" (Byval ficload As ZString Ptr,ByVal textlist As ZString Ptr,_ 
+         Byval defauttext As ZString Ptr, ByVal size As uint) As Integer        
 Type vertex_type
     As single x,y,z
 End Type
@@ -233,8 +241,15 @@ guinotice msg
 time0=timer
 End Sub
 Dim Shared As Integer tcanoe
+Dim Shared As Single canoex,canoey,canoez,canoeo1,canoeo2,canoeo3,shipx,shipy,shipz,shipo1,shipo2,shipo3
 Sub subcanoe
-tcanoe=(tcanoe+1)Mod 2
+tcanoe=(tcanoe+1)Mod 3
+shipo1=canoeo1
+shipo2=canoeo2
+shipo3=canoeo3
+shipx=canoex
+shipy=canoey
+shipz=canoez
 Sleep 200
 guisetfocus("win.graph2")
 End Sub
@@ -357,7 +372,6 @@ End Sub
 initsounds()
 'soundseagull
 
-Dim Shared As Single canoex,canoey,canoez,canoeo1,canoeo2,canoeo3
 
 Dim As String ficin
 Dim As String ficini="seashore.ini"
@@ -389,6 +403,9 @@ ncloud2=150
 If Not Eof(file) Then Line Input #file,ficin:ncloud2=Val(ficin)
 Close #file
 
+shipo1=canoeo1
+shipo2=canoeo2
+shipo3=canoeo3
 
 Dim Shared As Integer wx,wy,depth
 ScreenInfo wx,wy,depth
@@ -508,7 +525,7 @@ guistartOpenGL("win.graph2")
 
 'Declare Sub testopengl()
 'testopengl()
-Dim Shared As uint mygltext(11),mygltextwave(11),mygltextfire(11),firetext,mygltextshadowfire(11)
+Dim Shared As uint mygltext(11),mygltextwave(11),mygltextfire(11),firetext,mygltextshadowfire(11),windtext
 Sub inittextures(ii As Integer=1)
 Dim As Integer i=0
 Var nimage=""
@@ -584,6 +601,8 @@ For i=0 To 11
 Next
 If firetext<>0 Then guideletetexture(firetext)
 firetext=guiloadtexture(ExePath+"/media/fire.jpg",250)
+If windtext<>0 Then guideletetexture(windtext)
+windtext=guiloadtexture(ExePath+"/media/vent.jpg",250)
 printgui("win.msg",Space(200))
 End Sub
 inittextures(iimage)
@@ -595,7 +614,7 @@ Const As Single radtodeg=90/ASin(1)
 Dim Shared As Integer tactive,trun
 
 Dim Shared As Single collidex,collidey,collidez,collidex2,collidey2,collidez2,tswim
-Dim Shared  As Single mx0,my0,mz0,o10,mz1,o20,mzsub
+Dim Shared  As Single mx0,my0,mz0,o10,mz1,o20,mzsub,ksail=1
 Dim Shared As double time1,time2,dtime=0,fps=1,timemsg,kfps=1
 time0=Timer
 
@@ -618,7 +637,7 @@ While quit=0 And guitestkey(vk_escape)=0
 	kfps=30.0/max(1.0,fps)
 	If Timer>timemsg+0.2 Then
 		timemsg=Timer 
-		printguih(winmsg,"fps "+Str(Int(fps))+"   ")
+		printguih(winmsg,"fps "+Str(Int(fps))+"          ")
 		tactive=0
 		If winh=getactivewindow() Then tactive=1
 		Var vol=max(5.0,min(1000.0,1000*200/max(200.0,330-mx)))
@@ -637,8 +656,9 @@ While quit=0 And guitestkey(vk_escape)=0
     If guitestkey(vk_numpad8) Or guitestkey(vk_b)Or guitestkey(vk_prior)Or mouseup And tmm Then o2=min(85.0,o2+3*kfps)
     If guitestkey(vk_numpad2) Or guitestkey(vk_n)Or guitestkey(vk_next)Or mousedown And tmm Then o2=max(-85.0,o2-3*kfps)
     If guitestkey(vk_numpad5) Then o2=0
-    If guitestkey(vk_left) Or guitestkey(vk_numpad1) Or mouseleft And tmm Then o1+=3*kfps
-    If guitestkey(vk_right) Or guitestkey(vk_numpad3) Or mouseright And tmm Then o1-=3*kfps
+    If tcanoe<>2 Then ksail=1
+    If guitestkey(vk_left) Or guitestkey(vk_numpad1) Or mouseleft And tmm Then o1+=3*kfps*ksail
+    If guitestkey(vk_right) Or guitestkey(vk_numpad3) Or mouseright And tmm Then o1-=3*kfps*ksail
     If guitestkey(vk_c) And guitestkey(vk_control)=0 Then subcanoe():Sleep 200
     If guitestkey(vk_c) And guitestkey(vk_control) Then subncloud():Sleep 200
     If (guitestkey(vk_up) Or (mouseforward And tmm))And trun=0 Then
@@ -759,7 +779,7 @@ Sub initgl
 	'gluPerspective   48.0,    640.0/480.0,  2.0, 13000.0
 	'gldistmax=13000*10
 	'gluPerspective   48.0,    xmax/ymax,  2.0, gldistmax*25
-	gluPerspective   48.0,    xmax/ymax,  5.3, 100000'1700000
+	gluPerspective   48.0,    xmax/ymax,  2.0, 100000'1700000
 	'gluPerspective   89.0,    xmax/ymax,  3.3, 100000'1700000
 	glMatrixMode GL_MODELVIEW
 	glLoadIdentity
@@ -1588,6 +1608,7 @@ Declare Sub drawclouds()
 Declare Sub drawcloudshadows()
 Declare Sub drawgrass() 
 Declare Sub drawraindrops()
+Declare Sub drawwind()
 Dim Shared As Double tdrawraindrops,dtraindrop=2
 Sub drawshadows()
 gldisable gl_depth_test 
@@ -1666,6 +1687,7 @@ Sub rotavion2(ByVal x As Single,ByVal y As Single)
  y2=-x*sin1+y*cos1
  'z2=-x1*sin2+z*cos2
 End Sub
+Dim Shared As Single prop,vprop
 Sub display()
 Dim As Integer i,j,k 
 
@@ -1675,7 +1697,7 @@ Dim As Integer i,j,k
 	glloadidentity
 		 
    yh=28'50'28
-   mx=max(-2400.0-2000,min(1800.0,mx))
+   mx=max(-2400.0-2000,min(2800.0,mx))
    mz=max(-15.0,min(200.0,mz))
    If mz>4 Then
    	o22=0:o33=0:z22=0
@@ -1778,6 +1800,7 @@ EndIf
 	    drawmouse()
 	    
 	    drawboussole()
+     	 If tcanoe=2 Then drawwind()
 	    
        If auxtest>0.01 Then  
         If Abs(auxvar)>0.00001 Then gldrawtext("aux= "+Str(auxvar),15,ymax-179,1.2)
@@ -1788,13 +1811,16 @@ EndIf
         If Abs(auxvar6)>0.00001 Then gldrawtext("aux6= "+Str(auxvar6),15,ymax-279,1.2)
         If auxtext<>"" Then gldrawtext(auxtext,15,ymax-299,1.2)
        EndIf
-       gldrawtext("x= "+Str(Int(mx))+"  y= "+Str(Int(my))+"  z= "+Str(Int(mz+z22)),15,ymax-10,1.2)
+       If tcanoe=2 Then
+       	gldrawtext("prop= "+Left(Str(prop),4)+"   v="+Left(Str(vprop),4),15,ymax-34,1.2)
+       EndIf
+       gldrawtext("x= "+Str(Int(mx))+"  y= "+Str(Int(my))+"  z= "+Str(Int(mz+z22)),15,ymax-8,1.2)
 
 	    If time1<time0+60 Then
-		    gldrawtext("F3 change time",15,ymax-120,1.2)
-		    gldrawtext("B N pageup pagedown",15,ymax-100,1.2)
-		    gldrawtext("Z S W",15,ymax-80,1.2)
-		    gldrawtext("mouse click",15,ymax-60,1.2)
+		    gldrawtext("F3 change time",15,ymax-130,1.2)
+		    gldrawtext("B N pageup pagedown",15,ymax-110,1.2)
+		    gldrawtext("Z S W",15,ymax-90,1.2)
+		    gldrawtext("mouse click",15,ymax-70,1.2)
 	    EndIf
 
 	    glenable gl_depth_test
@@ -2023,6 +2049,7 @@ iy=max2(4,min2(40,iy0))
 rx0=49000
 If tinitskydome=0 Then 
  tinitskydome=1
+ printgui("win.msg","init skydome      ")
  For i=0 To ix
 	For j=0 To iy
 		skydometx(i,j)=i/ix
@@ -2155,7 +2182,9 @@ EndIf
  	   glenable gl_alpha_test
  For i= 1 To ntree
       tshowtree(i)=0
- 	   If Abs(treex(i)-mx)>2000 Then Continue For 
+ 	   If Abs(treex(i)-mx)>2000 And mx<1000 Then Continue For 
+ 	   If Abs(treex(i)-mx)>3000 And mx>1000 And mx<2000 Then Continue For 
+ 	   If Abs(treex(i)-mx)>4000 And mx>2000 Then Continue For 
       Var changetree=0,disttree=2500	
       'While treex(i)<mx-disttree :treex(i)+=disttree*2:changetree=1:Wend 
       'While treex(i)>mx+disttree :treex(i)-=disttree*2:changetree=1:Wend 	
@@ -2346,7 +2375,11 @@ myobjlist=glgenlists(1)
 glnewlist myobjlist,GL_COMPILE 'GL_COMPILE_AND_EXECUTE'4865
 If FileExists(objfic) Then
   'load3DS(@objfic,@"",@"")
-  load3DSsize(@objfic,@"",@"",size)'150)
+  If Right(objfic,4)=".3ds" Then
+  	  load3DSsizesmooth(@objfic,@"",@"",size)'150)
+  ElseIf Right(objfic,4)=".obj" Then
+  	  loadobjsizesmooth(@objfic,@"",@"",size)'150)
+  EndIf
 EndIf
 glendlist	
 Return myobjlist
@@ -2616,6 +2649,8 @@ EndIf
 	glDepthMask(GL_true)
 	gldisable gl_blend	
 End Sub
+Dim Shared As Single windo1,windv=1,windo3,windprop,shipv,shipdo1,shipo10,shipoo1
+Dim Shared As uint shiptext,shiplist,shipshadowtext,shipshadowtext2
 Dim Shared As uint canoetext,canoelist,canoeshadowtext,canoeshadowtext2
 Dim Shared As Integer tup
 Dim Shared As Double timeup
@@ -2647,6 +2682,8 @@ Dim As Integer i
 If canoetext=0 Then
 	canoetext=guiloadtexture(ExePath+"/objects/canoe_low.jpg")
    canoelist=loadlist(ExePath+"/objects/canoe_low.3ds",40)
+	shiptext=guiloadtexture(ExePath+"/objects/sailship.jpg")
+   shiplist=loadlist(ExePath+"/objects/sailship.obj",60)
 EndIf
 If tcanoe=0 Then
 	drawcanoe0
@@ -2732,18 +2769,78 @@ Else
  EndIf
 EndIf  
 glcolor3f(1,1,1)
-glbindtexture(GL_TEXTURE_2D,canoetext)
-'gldisable gl_lighting
+If tcanoe=1 Then glbindtexture(GL_TEXTURE_2D,canoetext)
+If tcanoe=2 Then glbindtexture(GL_TEXTURE_2D,shiptext)
      rotavion(canoex-mx,canoey-my,canoez-mz)
      If x2>(0.9*max(Abs(y2),Abs(z2))-200) Then 	
+      glenable gl_lighting
       glClear (GL_DEPTH_BUFFER_BIT)
     	glpushmatrix
-  		gltranslatef(canoex,canoey,canoez)
-    	glrotatef(canoeo1,0,0,1)
-    	glrotatef(canoeo2,0,1,0)
-    	glrotatef(canoeo3,1,0,0)
-    	glcalllist canoelist
+    	If tcanoe=1 Then 
+  		   gltranslatef(canoex,canoey,canoez)
+    	   glrotatef(canoeo1,0,0,1)
+    	   glrotatef(canoeo2,0,1,0)
+    	   glrotatef(canoeo3,1,0,0)
+    		glcalllist canoelist
+    	EndIf
+    	If tcanoe=2 Then
+    		mx=max(mx,200.0)
+    		While canoeo1>180:canoeo1-=360:shipo1=canoeo1:Wend
+    		While canoeo1<-180:canoeo1+=360:shipo1=canoeo1:Wend 
+    		shipdo1+=(o1-shipo10-shipdo1*1.01)*kfps*0.1
+    		shipo10=o1
+    		shipdo1=max(-3.0,min(3.0,shipdo1))
+    		o1+=shipdo1*kfps*0.6
+    		canoeo2=max(-45.0,min(45.0,canoeo2))
+    		canoeo3=max(-45.0,min(45.0,canoeo3))
+    		shipo1+=(canoeo1+shipoo1-shipo1)*kfps*0.1
+    		shipo2+=(canoeo2*0.75-shipo2)*kfps*0.1
+    		shipo3+=(canoeo3*0.75-shipo3)*kfps*0.1
+    		shipx+=(canoex-shipx)*min(0.9,kfps*0.31)
+    		shipy+=(canoey-shipy)*min(0.9,kfps*0.31)
+    		shipz+=(canoez-shipz)*min(0.9,kfps*0.31)
+  		   Var do1=windo1-shipo1
+  		   While do1>180:do1-=360:Wend
+  		   While do1<-180:do1+=360:wend
+  		   Var windvv=windv*2
+  		   If do1>0 Then
+  		   	windo3=(90-Abs(do1-90))*windvv*0.06
+  		   Else
+  		   	windo3=(-90+Abs(do1+90))*windvv*0.06
+  		   EndIf
+  		   Var co1=Cos(degtorad*(windo1-shipo1))
+  		   Var si1=Sin(degtorad*(windo1-shipo1))
+  		   Var kvoile=0.8
+  		   If co1>0 Then
+  		   	windprop=(windvv-shipv*(co1+0.115))*kvoile
+  		   ElseIf co1>-0.92 Then 
+  		   	windprop=(windvv*(1+1.08*co1)+shipv*(co1-0.115))*kvoile
+  		   Else 
+  		   	windprop=(windvv*(1+1.19*co1)+shipv*(co1-0.115))*kvoile
+  		   EndIf
+  		   Var kmass=0.02
+  		   shipv+=(windprop-0.1*shipv)*kfps*kmass
+  		   shipv=max(-7.0,min(7.0,shipv))
+  		   ksail=shipv/5.0
+  		   trun=0
+  		   prop=windprop:vprop=shipv
+  		   Var kkfps=kfps*0.07
+  		   mx+=Cos(degtorad*shipo1)*shipv*kkfps
+  		   my+=Sin(degtorad*shipo1)*shipv*kkfps
+  		   gltranslatef(shipx,shipy,shipz)
+    	   glrotatef(shipo1,0,0,1)
+    	   glrotatef(shipo2,0,1,0)
+    	   glrotatef(shipo3-windo3,1,0,0)
+    		If do1>0 Then
+    			gltranslatef(19.25,-0.5,3.5)
+    		Else 
+    			gltranslatef(19.25,0.5,3.5)
+    		EndIf
+    		If do1>0 Then glscalef(1,-1,1)
+    		glcalllist shiplist
+    	EndIf
       glpopmatrix
+      If tdark=0 Then gldisable gl_lighting
      EndIf  
 End Sub 
 Dim Shared As uint helentext,shadowhelentext,katetext,shadowkatetext,helenbluetext,helenredtext,helenyellowtext
@@ -2769,6 +2866,7 @@ End Sub
 Sub drawhelene()
 Dim As Integer i,j,k 
 If helentext=0 Then
+   printgui("win.msg","init helene     ")
 	Randomize()
 	helentext=guiloadtexture(ExePath+"/objects/helene_bikini.jpg")
 	helenbluetext=guiloadtexture(ExePath+"/objects/helene_bikini_blue.jpg")
@@ -2897,6 +2995,7 @@ End Sub
 Sub drawkate()
 Dim As Integer i,j,k 
 If katetext=0 Then
+   printgui("win.msg","init kate     ")
 	Randomize()
 	katetext=guiloadtexture(ExePath+"/objects/helene_bikini_green.jpg")
 	shadowkatetext=guiloadtexture(ExePath+"/objects/heleneshadow.jpg",250,255,4)
@@ -3024,6 +3123,7 @@ Dim Shared As Double tsoundseagull
 Sub drawseagull()
 Dim As Integer i	
 If seagulltext(0)=0 Then
+  printgui("win.msg","init seagull      ")
   For i=0 To 4
 	 seagulltext(i)=guiloadtexture(ExePath+"/media/seagull/seagull"+Str(i+1)+".jpg",250,255)
 	 seagullshadowtext(i)=guiloadtexture(ExePath+"/media/seagull/seagull"+Str(i+1)+".jpg",250,255,4)
@@ -3175,6 +3275,7 @@ Sub drawcanoeshadow()
 If canoeshadowtext=0 Then
 	 canoeshadowtext=guiloadtexture(ExePath+"/objects/canoeshadow.jpg",200,255)	
 	 canoeshadowtext2=guiloadtexture(ExePath+"/objects/canoeshadow2.jpg",200,255)	
+	 shipshadowtext=guiloadtexture(ExePath+"/objects/sailship_shadow.jpg",200,255)	
 EndIf
 If tdark=1 Then Exit Sub
 rotavion(canoex-mx,canoey-my,canoez-mz)
@@ -3192,6 +3293,20 @@ If x2>0.9*max(Abs(y2),Abs(z2))-300 Then
 	Var y2=y1-(80)*si1
 	Var x3=canoex-40*co1
 	Var y3=canoey-40*si1
+	If tcanoe=2 Then
+		h=80
+      Var do3=shipo3-windo3
+      Var si3=Sin(degtorad*do3)
+      Var si2=Sin(degtorad*shipo2)
+		x0=canoex+40*co1
+		y0=canoey+40*si1
+	   x1=x0+h*(sunco1*suntan2+si1*si3+co1*si2)
+	   y1=y0+h*(sunsi1*suntan2-co1*si3+si1*si2)
+	   x2=x1-(80)*co1
+	   y2=y1-(80)*si1
+	   x3=canoex-40*co1
+	   y3=canoey-40*si1
+	EndIf
    glenable gl_blend
    glblendfunc gl_zero,gl_one_minus_src_alpha
    glcolor4f(0.6,0.6,0.6,0.6) 
@@ -3200,7 +3315,8 @@ If x2>0.9*max(Abs(y2),Abs(z2))-300 Then
   Var do1=canoeo1-suno1	
   Var dco1=Cos(do1*degtorad)
   If Abs(dco1)<=0.983 Then  
-	glbindtexture(gl_texture_2d,canoeshadowtext)
+	If tcanoe=1 Then glbindtexture(gl_texture_2d,canoeshadowtext)
+	If tcanoe=2 Then glbindtexture(gl_texture_2d,shipshadowtext)
 	glbegin(gl_quads)
 	glTexCoord2f(1,0)
 	glvertex3f(x0,y0,z0)
@@ -3598,6 +3714,32 @@ x1=x*0.5:x0=0-x1
     Next i 
     glcolor4f(1,1,1,1)
     gldisable gl_alpha_test
+End Sub
+Dim Shared As Double timewind
+Sub drawwind'boussole
+ If time1>timewind+0.15 Then
+ 	If timewind<0.001 Then windo1=(Rnd-0.5)*360
+ 	timewind=time1
+ 	windv=max(0.8,min(1.2,windv+(Rnd-0.5)*0.25))
+ 	windo1+=(Rnd-0.5)*2
+ 	If windo1>180 Then windo1-=360
+ 	If windo1<-180 Then windo1+=360
+ EndIf
+ glenable gl_alpha_test
+ glAlphaFunc(gl_less,10/254)
+ glcolor3f(1,1,1)
+ glbindtexture(gl_texture_2d,windtext)
+ glpushmatrix
+ glloadidentity
+ glplacecursor(xmax-40,40)
+ glrotatef(90-o1,0,0,1)
+ gltexcarre(3)
+ glrotatef(windo1-90,0,0,1)
+ 'glcolor3f(0.7,0.8,0.7)
+ gltexcarre(1.2)
+ glpopmatrix
+ glcolor3f(1,1,1)
+ gldisable gl_alpha_test
 End Sub
 
 
