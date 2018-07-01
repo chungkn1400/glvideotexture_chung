@@ -2650,7 +2650,7 @@ EndIf
 	gldisable gl_blend	
 End Sub
 Dim Shared As Single windo1,windv=1,windo3,windprop,shipv,shipdo1,shipo10,shipoo1
-Dim Shared As uint shiptext,shiplist,shipshadowtext,shipshadowtext2
+Dim Shared As uint shiptext,shiplist,shipshadowtext,shipshadowtext2,shipbarretext,shipbarrelist
 Dim Shared As uint canoetext,canoelist,canoeshadowtext,canoeshadowtext2
 Dim Shared As Integer tup
 Dim Shared As Double timeup
@@ -2682,8 +2682,10 @@ Dim As Integer i
 If canoetext=0 Then
 	canoetext=guiloadtexture(ExePath+"/objects/canoe_low.jpg")
    canoelist=loadlist(ExePath+"/objects/canoe_low.3ds",40)
-	shiptext=guiloadtexture(ExePath+"/objects/sailship.jpg")
+	shiptext=guiloadtexture(ExePath+"/objects/sailship.jpg",10,255)
    shiplist=loadlist(ExePath+"/objects/sailship.obj",60)
+	shipbarretext=guiloadtexture(ExePath+"/objects/sailship0.jpg")
+   shipbarrelist=loadlist(ExePath+"/objects/sailship_barre.3ds",3)
 EndIf
 If tcanoe=0 Then
 	drawcanoe0
@@ -2768,9 +2770,15 @@ Else
  	canoeo3=Sin(tt*2.8)*5.5
  EndIf
 EndIf  
-glcolor3f(1,1,1)
-If tcanoe=1 Then glbindtexture(GL_TEXTURE_2D,canoetext)
-If tcanoe=2 Then glbindtexture(GL_TEXTURE_2D,shiptext)
+glcolor4f(1,1,1,1)
+If tcanoe=1 Then
+	glbindtexture(GL_TEXTURE_2D,canoetext)
+EndIf
+If tcanoe=2 Then
+	glenable gl_alpha_test
+	glalphafunc(gl_gequal,40/255)
+	glbindtexture(GL_TEXTURE_2D,shiptext)
+EndIf
      rotavion(canoex-mx,canoey-my,canoez-mz)
      If x2>(0.9*max(Abs(y2),Abs(z2))-200) Then 	
       glenable gl_lighting
@@ -2838,8 +2846,30 @@ If tcanoe=2 Then glbindtexture(GL_TEXTURE_2D,shiptext)
     		EndIf
     		If do1>0 Then glscalef(1,-1,1)
     		glcalllist shiplist
+         gldisable gl_alpha_test
+	      glbindtexture(GL_TEXTURE_2D,shipbarretext)
+    		If do1>0 Then
+    			gltranslatef(-14.55,0.24,4.7)
+    		Else 
+    			gltranslatef(-14.55,0.1,4.7)
+    		EndIf
+    		If guitestkey(vk_left) Then
+    			shipoo1=min(200.0,shipoo1+kfps*10)
+    		ElseIf guitestkey(vk_right) Then
+    			shipoo1=max(-200.0,shipoo1-kfps*10)
+    		Else
+    			shipoo1+=(0-shipoo1)*kfps*0.07
+    		EndIf
+    		If do1>0 Then
+    			glrotatef(shipoo1,1,0,0)
+    		Else 
+    			glrotatef(-shipoo1,1,0,0)
+    		EndIf
+    		glscalef(0.54,0.54,0.54)
+    		glcalllist shipbarrelist
     	EndIf
       glpopmatrix
+      gldisable gl_alpha_test
       If tdark=0 Then gldisable gl_lighting
      EndIf  
 End Sub 
