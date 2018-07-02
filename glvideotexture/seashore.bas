@@ -1600,6 +1600,7 @@ Declare Sub drawshadowkate()
 Declare Sub drawseagullshadow()
 Declare Sub drawcabaneshadow()
 Declare Sub drawcanoeshadow()
+Declare Sub drawnshipshadow()
 Declare Sub drawrocs()
 Declare Sub drawcabane()
 Declare Sub drawfire()
@@ -1636,6 +1637,7 @@ drawshadowhelen()
 drawshadowkate()
 drawcabaneshadow()
 drawcanoeshadow()
+drawnshipshadow()
 
 gldisable gl_texture_2D
 gldisable gl_alpha_test
@@ -1791,6 +1793,7 @@ EndIf
 	drawseagullshadow()
    drawcabaneshadow()
    drawcanoeshadow()
+   drawnshipshadow()
    drawcloudshadows()
 	drawtrees()
 	drawbushs()
@@ -3495,6 +3498,105 @@ If dco1>0.983 Then
    glenable gl_depth_test
 EndIf
 End Sub
+Sub drawnshipshadow()
+If tdark=1 Then Exit Sub
+rotavion(nshipx-mx,nshipy-my,nshipz-mz)
+If x2>0.9*max(Abs(y2),Abs(z2))-500 Then
+	Var co1=Cos(nshipo1*degtorad)
+	Var si1=Sin(nshipo1*degtorad)
+	Var x0=nshipx+40*co1
+	Var y0=nshipy+40*si1
+	Var z0=1
+	If nshipx>100 Then z0=nshipz
+	Var h=35.0
+	Var x1=x0+h*sunco1*suntan2
+	Var y1=y0+h*sunsi1*suntan2
+	Var x2=x1-(80)*co1
+	Var y2=y1-(80)*si1
+	Var x3=nshipx-40*co1
+	Var y3=nshipy-40*si1
+	If 1 Then
+		h=80
+      Var do3=shipo3-windo3
+      Var si3=Sin(degtorad*do3)
+      Var si2=Sin(degtorad*shipo2)
+		x0=nshipx+52*co1
+		y0=nshipy+52*si1
+	   x1=x0+h*(sunco1*suntan2+si1*si3+co1*si2)
+	   y1=y0+h*(sunsi1*suntan2-co1*si3+si1*si2)
+	   x2=x1-(104)*co1
+	   y2=y1-(104)*si1
+	   x3=nshipx-52*co1
+	   y3=nshipy-52*si1
+	EndIf
+   glenable gl_blend
+   glblendfunc gl_zero,gl_one_minus_src_alpha
+   glcolor4f(0.6,0.6,0.6,0.6) 
+   gldisable gl_depth_test
+   glDepthMask(GL_true)
+  Var do1=nshipo1-suno1	
+  Var dco1=Cos(do1*degtorad)
+  If Abs(dco1)<=0.983 Then  
+	glbindtexture(gl_texture_2d,shipshadowtext)
+	glbegin(gl_quads)
+	glTexCoord2f(1,0)
+	glvertex3f(x0,y0,z0)
+	gltexcoord2f(1,1)
+	glvertex3f(x1,y1,z0)
+	glTexCoord2f(0,1)
+	glvertex3f(x2,y2,z0)
+	gltexcoord2f(0,0)
+	glvertex3f(x3,y3,z0)
+	glend()
+  EndIf 	
+  Var x10=30.0,y10=7,t0=0.3
+  If dco1>0.983 Then
+  	x0+=-co1*x10+si1*y10
+  	y0+=-si1*x10-co1*y10
+  	x1+=-co1*x10+si1*y10
+  	y1+=-si1*x10-co1*y10
+  	x2=x1-si1*2*y10
+  	y2=y1+co1*2*y10
+  	x3=x0-si1*2*y10
+  	y3=y0+co1*2*y10
+	glbindtexture(gl_texture_2d,canoeshadowtext2)
+	glbegin(gl_quads)
+	glTexCoord2f(1,t0)
+	glvertex3f(x0,y0,z0)
+	gltexcoord2f(1,1)
+	glvertex3f(x1,y1,z0)
+	glTexCoord2f(0,1)
+	glvertex3f(x2,y2,z0)
+	gltexcoord2f(0,t0)
+	glvertex3f(x3,y3,z0)
+	glend()
+  EndIf
+  If dco1<-0.983 Then
+  	x0+=-co1*(80-x10)+si1*y10
+  	y0+=-si1*(80-x10)-co1*y10
+  	x1+=-co1*(80-x10)+si1*y10
+  	y1+=-si1*(80-x10)-co1*y10
+  	x2=x1-si1*2*y10
+  	y2=y1+co1*2*y10
+  	x3=x0-si1*2*y10
+  	y3=y0+co1*2*y10
+	glbindtexture(gl_texture_2d,canoeshadowtext2)
+	glbegin(gl_quads)
+	glTexCoord2f(1,t0)
+	glvertex3f(x0,y0,z0)
+	gltexcoord2f(1,1)
+	glvertex3f(x1,y1,z0)
+	glTexCoord2f(0,1)
+	glvertex3f(x2,y2,z0)
+	gltexcoord2f(0,t0)
+	glvertex3f(x3,y3,z0)
+	glend()
+  EndIf
+   glcolor4f(1,1,1,1)
+   gldisable gl_blend
+   glenable gl_depth_test
+EndIf
+End Sub
 Dim Shared As Double timecollide
 Sub testcollide()
 If time1<timecollide+0.1 Or testhelen=1 Or testkate=1 Then Exit Sub
@@ -3764,6 +3866,7 @@ If grasstext=0 Then
    grasslist=loadlist(ExePath+"/objects/grassobj.3ds",7)
 	initgrass()
 EndIf
+If mx>distgrass-250 Then Exit sub
 x1=x*0.5:x0=0-x1
     If Rnd<0.15*kfps Then
     	grasswind+=(Rnd-0.5)*2.5
