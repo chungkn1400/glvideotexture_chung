@@ -214,8 +214,8 @@ Sleep 200
 guisetfocus("win.graph2")	
 End Sub
 Declare Sub resetbikini()
-Dim Shared As Single mx,my,mz,yh,dmx,dmy,dmz
-Dim Shared As Single o1,o2,o3,cos1=1,sin1,cos2=1,sin2,cos3=1,sin3,o22,o33,z22
+Dim Shared As Single mx,my,mz,yh,dmx,dmy,dmz,heado1
+Dim Shared As Single o1,o2,o3,cos1=1,sin1,cos2=1,sin2,cos3=1,sin3,o22,o33,z22,tcos1=1,tsin1=0
 Sub subreset
 	mx=0:my=0:mz=0:o1=0:o2=0:o3=0
 	cos1=1:sin1=0:cos2=1:sin2=0:cos3=1:sin3=0
@@ -231,9 +231,10 @@ msg+=crlf+"blue...red => bikini color"
 msg+=crlf+"wavez => deep ocean wave heights"
 msg+=crlf+"arrows => move"
 msg+=crlf+"pageup,down => look up/down"
-msg+=crlf+"C => canoe on/off"
+msg+=crlf+"C => canoe,sail on/off"
 msg+=crlf+"Z,S => fly up/down"
 msg+=crlf+"S  => swim"
+msg+=crlf+"A,E,Q,D  =>  turn head (sail mode)"
 msg+=crlf+"F1 => help"
 msg+=crlf+"F3 => change time"
 msg+=crlf+"ctrl+C => number of clouds"
@@ -663,16 +664,19 @@ While quit=0 And guitestkey(vk_escape)=0
     If tcanoe<>2 Then ksail=1
     If guitestkey(vk_left) Or guitestkey(vk_numpad1) Or mouseleft And tmm Then o1+=3*kfps*ksail
     If guitestkey(vk_right) Or guitestkey(vk_numpad3) Or mouseright And tmm Then o1-=3*kfps*ksail
+    If guitestkey(vk_a) Or guitestkey(vk_q) Then heado1=min(120.0,heado1+kfps*1.4)
+    If guitestkey(vk_e) Or guitestkey(vk_d) Then heado1=max(-120.0,heado1-kfps*1.4)
+    If guitestkey(vk_up) Or guitestkey(vk_down) Then heado1=0
     If guitestkey(vk_c) And guitestkey(vk_control)=0 Then subcanoe():Sleep 200
     If guitestkey(vk_c) And guitestkey(vk_control) Then subncloud():Sleep 200
     If (guitestkey(vk_up) Or (mouseforward And tmm))And trun=0 Then
-    	 Var kkfps=kfps:If mx>100 Then kkfps*=0.3
+    	 Var kkfps=kfps:If mx>100 Then kkfps*=0.3*1.4
     	 If tswim=1 Then kkfps*=0.40+0.3*Cos(time1)*Cos(time1)
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
     	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
     EndIf
     If trun=1 Then
-    	 Var kkfps=kfps:If mx>100 Then kkfps*=0.2
+    	 Var kkfps=kfps:If mx>100 Then kkfps*=0.2*1.4
     	 If tswim=1 Then kkfps*=0.15+0.3*Cos(time1)*Cos(time1)
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
     	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
@@ -1712,14 +1716,23 @@ Dim As Integer i,j,k
    cos2=Cos((o2+o22)*degtorad):sin2=Sin((o2+o22)*degtorad)
    cos3=Cos((o3+o33)*degtorad):sin3=Sin((o3+o33)*degtorad)
    dmx=cos1*cos2:dmy=sin1*cos2:dmz=sin2
+   Var do1=o1
+   If tcanoe=0 Then heado1=0
+   If tcanoe>0 Then do1+=heado1
+   tcos1=Cos(do1*degtorad):tsin1=Sin(do1*degtorad)
+   Var ddmx=tcos1
+   Var ddmy=tsin1
 	'glulookat(mx,my,mz+yh, mx+1000*dmx,my+1000*dmy,mz+1000*dmz+yh, 0,0,1)
-   glulookat(mx,my,mz+yh+z22+z23+mzsub, mx+1000*dmx,my+1000*dmy,mz+1000*dmz+yh+z22+z23+mzsub, -sin3*sin1*0.9985*cos2,sin3*cos1*0.9985*cos2,cos3)
+   glulookat(mx,my,mz+yh+z22+z23+mzsub, mx+1000*ddmx,my+1000*ddmy,mz+1000*dmz+yh+z22+z23+mzsub, -sin3*sin1*0.9985*cos2,sin3*cos1*0.9985*cos2,cos3)
 
 	'dtime=time1-time0
 	'itime=Int(dtime)Mod 12
 	
 	
 	If tdark=1 Then glenable gl_lighting
+
+Var cos1save=cos1,sin1save=sin1,o1save=o1
+cos1=tcos1:sin1=tsin1:o1=o1+heado1
 
 	glpushmatrix
    gltranslatef(mx,my,0)
@@ -1798,7 +1811,10 @@ EndIf
    	testcollide()
    EndIf
 	
+	cos1=cos1save:sin1=sin1save:o1=o1save
 	drawcanoe()
+   cos1=tcos1:sin1=tsin1:o1=o1+heado1
+   
 	If Timer<tdrawraindrops+dtraindrop Then drawraindrops()
 	
    gldisable gl_lighting
@@ -1809,6 +1825,8 @@ EndIf
 	    
 	    drawboussole()
      	 If tcanoe=2 Then drawwind()
+
+	cos1=cos1save:sin1=sin1save:o1=o1save
 	    
        If auxtest>0.01 Then  
         If Abs(auxvar)>0.00001 Then gldrawtext("aux= "+Str(auxvar),15,ymax-179,1.2)
