@@ -512,6 +512,8 @@ winmsg=getguih("win.msg")
 Declare Sub initgl
 Declare Sub gldrawtext0(ByRef text As String,ByVal x As Single,ByVal y As Single,ByVal scale As Single=1.0)
 Declare Sub display()
+Sleep 500
+guiscan
 guistartOpenGL("win.graph2")
         initgl
         glclearcolor 0,0.7,0, 0.0
@@ -615,12 +617,13 @@ Const As Single radtodeg=90/ASin(1)
 Dim Shared As Integer tactive,trun
 
 Dim Shared As Single collidex,collidey,collidez,collidex2,collidey2,collidez2,tswim
-Dim Shared  As Single mx0,my0,mz0,o10,mz1,o20,mzsub,ksail=1
+Dim Shared  As Single mx0,my0,mz0,o10,mz1,o20,mzsub,ksail=1,windo1
 Dim Shared As double time1,time2,dtime=0,fps=1,timemsg,kfps=1
 time0=Timer
 
 Randomize(0)
 mz=max(mz,8.0)
+windo1=(Rnd-0.5)*360
 
 While quit=0 And guitestkey(vk_escape)=0
 	guiscan
@@ -1599,6 +1602,7 @@ Declare Sub drawfire()
 Declare Sub drawsmokes()
 Declare Sub addsmoke(ByVal mx As Single,ByVal my As Single,ByVal mz As Single,ByVal itype As Integer=0,ByVal vz As Single=0)
 Declare Sub drawcanoe()
+Declare Sub drawnship()
 Declare Sub drawhelene()
 Declare Sub drawkate()
 Declare Sub drawsunset()
@@ -1688,7 +1692,7 @@ Sub rotavion2(ByVal x As Single,ByVal y As Single)
  y2=-x*sin1+y*cos1
  'z2=-x1*sin2+z*cos2
 End Sub
-Dim Shared As Single prop,vprop
+Dim Shared As Single prop,vprop,nshipx
 Sub display()
 Dim As Integer i,j,k 
 
@@ -1745,7 +1749,9 @@ If mx<1200 Or mz>8 Then
 	   drawsea0(140)
    EndIf 	
 	glpopmatrix
-EndIf 
+EndIf
+Var tdrawship=0
+If mx>nshipx+600 Then tdrawship=1:drawnship()
 If mx>590 Then
 	Var kblend=max(0.001,(min(mx,1190.0)-590)/600)
    'gldisable gl_lighting
@@ -1783,6 +1789,7 @@ EndIf
 	drawkate()
 	drawseagull()
 	drawcabane()
+	If tdrawship=0 Then drawnship()
 	drawfire()
 	drawsmokes()
    glnormal3f(0,0,1)
@@ -2650,7 +2657,7 @@ EndIf
 	glDepthMask(GL_true)
 	gldisable gl_blend	
 End Sub
-Dim Shared As Single windo1,windv=1,windo3,windprop,shipv,shipdo1,shipo10,shipoo1,shipdoo1
+Dim Shared As Single windv=1,windo3,windprop,shipv,shipdo1,shipo10,shipoo1,shipdoo1
 Dim Shared As uint shiptext,shiplist,shipshadowtext,shipshadowtext2,shipbarretext,shipbarrelist
 Dim Shared As uint canoetext,canoelist,canoeshadowtext,canoeshadowtext2
 Dim Shared As Integer tup
@@ -2802,9 +2809,10 @@ EndIf
     		o1+=shipdo1*kfps*0.6
     		canoeo2=max(-45.0,min(45.0,canoeo2))
     		canoeo3=max(-45.0,min(45.0,canoeo3))
-    		shipo1+=(canoeo1-shipo1)*kfps*0.1
-    		shipo2+=(canoeo2*0.75-shipo2)*kfps*0.1
-    		shipo3+=(canoeo3*0.75-shipo3)*kfps*0.1
+    		Var k01=0.11
+    		shipo1+=(canoeo1-shipo1)*kfps*k01
+    		shipo2+=(canoeo2*0.85-shipo2)*kfps*k01
+    		shipo3+=(canoeo3*0.85-shipo3)*kfps*k01
     		shipx+=(canoex-shipx)*min(0.9,kfps*0.31)
     		shipy+=(canoey-shipy)*min(0.9,kfps*0.31)
     		shipz+=(canoez-shipz)*min(0.9,kfps*0.31)
@@ -2822,18 +2830,18 @@ EndIf
   		   Var kvoile=0.8
   		   If co1>0 Then
   		   	windprop=(windvv-shipv*(co1+0.115))*kvoile
-  		   ElseIf co1>-0.92 Then 
-  		   	windprop=(windvv*(1+1.08*co1)+shipv*(co1-0.115))*kvoile
+  		   ElseIf co1>-0.94 Then 
+  		   	windprop=(windvv*(1+1.06*co1)+shipv*(co1-0.115))*kvoile
   		   Else 
   		   	windprop=(windvv*(1+1.19*co1)+shipv*(co1-0.115))*kvoile
   		   EndIf
   		   Var kmass=0.02
   		   shipv+=(windprop-0.1*shipv)*kfps*kmass
-  		   shipv=max(-7.0,min(7.0,shipv))
+  		   shipv=max(-5.0,min(5.0,shipv))
   		   ksail=shipv/5.0
   		   trun=0
   		   prop=windprop:vprop=shipv
-  		   Var kkfps=kfps*0.07
+  		   Var kkfps=kfps*0.07*2.5
   		   mx+=Cos(degtorad*shipo1)*shipv*kkfps
   		   my+=Sin(degtorad*shipo1)*shipv*kkfps
   		   gltranslatef(shipx,shipy,shipz)
@@ -2868,6 +2876,68 @@ EndIf
     		EndIf
     		glscalef(0.54,0.54,0.54)
     		glcalllist shipbarrelist
+    	EndIf
+      glpopmatrix
+      gldisable gl_alpha_test
+      If tdark=0 Then gldisable gl_lighting
+     EndIf  
+End Sub 
+Dim Shared As Single nshipy,nshipz,nshipo1,nshipo2,nshipo3,avgcanoez
+Dim Shared As Single nnshipx,nnshipy,nnshipz,nnshipo1,nnshipo2,nnshipo3
+Sub drawnship()
+Dim As Integer i
+avgcanoez+=(canoez-avgcanoez)*kfps*0.003
+nshipx=1600:nshipz=canoez-avgcanoez+4.55
+If mx<nshipx-400 Then nshipz=canoez
+If mx>nshipx+600 Then nshipz=canoez
+Var dist=4000
+While nshipy>my+dist:nshipy-=dist*1.999:Wend
+While nshipy<my-dist:nshipy+=dist*1.999:Wend
+nshipo3=Sin(time1*2.7)*4
+nshipo2=canoeo2
+nshipo1=-90
+If Abs(nnshipx-mx)<50 Then
+	If Abs(nnshipy-my)<80 Then
+		mx-=cos1*5
+		my-=sin1*5
+		Var dxy=(nnshipx-mx)*sin1-(nnshipy-my)*cos1
+		If dxy>0 Then
+			o1+=7
+		Else
+			o1-=7
+		EndIf
+	EndIf
+EndIf
+glcolor4f(1,1,1,1)
+glbindtexture(GL_TEXTURE_2D,shipbarretext)
+     rotavion(nshipx-mx,nshipy-my,nshipz-mz)
+     If x2>(0.9*max(Abs(y2),Abs(z2))-300) Then 	
+      glenable gl_lighting
+    	glpushmatrix
+    	If 1 Then'tnship=2 Then
+    		nshipo2=max(-45.0,min(45.0,nshipo2))
+    		nshipo3=max(-45.0,min(45.0,nshipo3))
+    		Var k01=0.11
+    		nnshipo1+=(nshipo1-nnshipo1)'*kfps*k01
+    		nnshipo2+=(nshipo2*0.85-nnshipo2)*kfps*k01
+    		nnshipo3+=(nshipo3*0.85-nnshipo3)*kfps*k01
+    		nnshipx+=(nshipx-nnshipx)*min(0.9,kfps*0.31)
+    		nnshipy+=(nshipy-nnshipy)*min(0.9,kfps*0.31)
+    		nnshipz+=(nshipz-nnshipz)*min(0.9,kfps*0.31)
+  		   Var do1=windo1-nnshipo1
+  		   While do1>180:do1-=360:Wend
+  		   While do1<-180:do1+=360:wend
+  		   gltranslatef(nnshipx,nnshipy,nnshipz)
+    	   glrotatef(nnshipo1,0,0,1)
+    	   glrotatef(nnshipo2,0,1,0)
+    	   glrotatef(nnshipo3,1,0,0)
+    		Var sc=3.5
+    		If do1>0 Then
+    			glscalef(sc,-sc,sc)
+    		Else
+    			glscalef(sc,sc,sc)
+    		EndIf
+    		glcalllist shiplist
     	EndIf
       glpopmatrix
       gldisable gl_alpha_test
