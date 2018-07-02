@@ -3434,7 +3434,7 @@ If x2>0.9*max(Abs(y2),Abs(z2))-300 Then
   Var do1=canoeo1-suno1	
   Var dco1=Cos(do1*degtorad)
   If Abs(dco1)<=0.983 Then  
-	If tcanoe=1 Then glbindtexture(gl_texture_2d,canoeshadowtext)
+	If tcanoe<=1 Then glbindtexture(gl_texture_2d,canoeshadowtext)
 	If tcanoe=2 Then glbindtexture(gl_texture_2d,shipshadowtext)
 	glbegin(gl_quads)
 	glTexCoord2f(1,0)
