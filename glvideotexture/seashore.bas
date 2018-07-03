@@ -664,8 +664,14 @@ While quit=0 And guitestkey(vk_escape)=0
     If tcanoe<>2 Then ksail=1
     If guitestkey(vk_left) Or guitestkey(vk_numpad1) Or mouseleft And tmm Then o1+=3*kfps*ksail
     If guitestkey(vk_right) Or guitestkey(vk_numpad3) Or mouseright And tmm Then o1-=3*kfps*ksail
-    If guitestkey(vk_a) Or guitestkey(vk_q) Then heado1=min(120.0,heado1+kfps*1.4)
-    If guitestkey(vk_e) Or guitestkey(vk_d) Then heado1=max(-120.0,heado1-kfps*1.4)
+    If guitestkey(vk_a) Or guitestkey(vk_q) Then
+    	heado1=heado1+kfps*1.4
+    	If heado1>180 Then heado1-=360
+    EndIf
+    If guitestkey(vk_e) Or guitestkey(vk_d) Then
+    	heado1=heado1-kfps*1.4
+    	If heado1<-180 Then heado1+=360
+    EndIf
     If guitestkey(vk_up) Or guitestkey(vk_down) Then heado1=0
     If guitestkey(vk_c) And guitestkey(vk_control)=0 Then subcanoe():Sleep 200
     If guitestkey(vk_c) And guitestkey(vk_control) Then subncloud():Sleep 200
