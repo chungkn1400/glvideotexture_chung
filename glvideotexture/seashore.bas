@@ -1033,6 +1033,7 @@ Sub setvideotexture(ByVal dtime As Double,ByRef itexture As Integer,ByRef tx As 
 	ty=(3-iy)/4
 	dtx=1/2:dty=0.86/4         
 End Sub
+Dim Shared As Integer tdrawrain
 Sub drawsea0(ddx As Single=0)
 Dim As Integer i,j,k,p
 Var dz0=-50.0,dzz0=-50.0,dzz=-50.0,dz=-50.0	
@@ -1041,7 +1042,11 @@ Dim As integer itexture=0
 Dim As Single tx=0.0,ty=0.0,dtx=1.0,dty=1.0
 setvideotexture(dtime,itexture,tx,ty,dtx,dty)
 glenable gl_texture_2D
-glbindtexture gl_texture_2D,mygltext(itexture)
+If tdrawrain=0 Then  
+  glbindtexture gl_texture_2D,mygltext(itexture)
+Else 
+  glbindtexture gl_texture_2D,mygltextwaterrain(itexture)
+EndIf  
 glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_linear)
 glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_linear)'NEAREST)'nomipmap
 glnormal3f(0,0,1)
@@ -2105,7 +2110,27 @@ If mx<1200 Or mz>8 Then
 	EndIf 	
    If mx>220 Or mz>30 Then
 	   drawsea0(140)
-   EndIf 	
+   EndIf
+   If train>=2 Then'Or (Int(mx/10)And 1) Then
+   	tdrawrain=1
+   	glpopmatrix
+   	glpushmatrix
+   	gltranslatef(dmmx,0,0.5)
+   	glenable gl_blend
+   	glblendfunc gl_src_color,gl_one'_minus_src_color
+   	Var s1=0.6
+   	glcolor4f(s1,s1,s1,s1)
+   	drawsea0()
+	   If mx>150 Or mz>15 Then
+		   drawsea0(70)
+	   EndIf 	
+      If mx>220 Or mz>30 Then
+	      drawsea0(140)
+      EndIf
+   	tdrawrain=0
+   	glcolor4f(1,1,1,1)
+   	gldisable gl_blend
+   EndIf
 	glpopmatrix
 EndIf
 Var tdrawship=0
@@ -2121,7 +2146,7 @@ If mx>590 Then
 Else
 	o22=0:o33=0:z22=0
 EndIf
-If train>=2 And mx>590 Then
+If train>=2 And mx>0 Then'590 Then
 	soundrain()
 	drawrain()
 Else
@@ -3060,6 +3085,7 @@ glbindtexture(GL_TEXTURE_2D,canoetext)
       glpopmatrix
      EndIf  
 End Sub
+Dim Shared As Single shipddo1
 Sub drawcanoe()
 Dim As Integer i
 If canoetext=0 Then
@@ -3196,6 +3222,14 @@ EndIf
   		   Var do1=windo1-shipo1
   		   While do1>180:do1-=360:Wend
   		   While do1<-180:do1+=360:wend
+         Var s14=14
+    	   If do1>0 And do1<40 And shipddo1<0.1 Then
+    	   	windo1+=s14
+    	   	shipddo1=100
+    	   ElseIf do1<0 And do1>-40 And shipddo1>-0.1 Then
+    	   	windo1-=s14
+    	   	shipddo1=-100
+    	   EndIf
   		   Var windvv=windv*2
   		   If do1>0 Then
   		   	windo3=(90-Abs(do1-90))*windvv*0.06
@@ -3269,8 +3303,8 @@ nshipx=1600:nshipz=canoez-avgcanoez+4.55
 If mx<nshipx-400 Then nshipz=canoez
 If mx>nshipx+600 Then nshipz=canoez
 Var dist=4000
-While nshipy>my+dist:nshipy-=dist*1.999:Wend
-While nshipy<my-dist:nshipy+=dist*1.999:Wend
+While nshipy>my+dist:nshipy-=dist*1.999:nnshipy=nshipy:Wend
+While nshipy<my-dist:nshipy+=dist*1.999:nnshipy=nshipy:Wend
 nshipo3=Sin(time1*2.7)*4
 nshipo2=canoeo2
 nshipo1=-90
