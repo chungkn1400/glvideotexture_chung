@@ -311,6 +311,10 @@ Sub initsounds()
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias wind",0,0,0)
    soundfic="sounds/subwater.mp3"
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias subwater",0,0,0)
+   soundfic="sounds/nemo.mp3"
+   mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias nemo",0,0,0)
+   soundfic="sounds/rain.mp3"
+   mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias rain",0,0,0)
    mcisendstring("play hello from 0",0,0,0)
    mcisendstring("play ocean from 0 repeat",0,0,0)
    mcisendstring("play nature from 0 repeat",0,0,0)
@@ -321,6 +325,7 @@ Sub initsounds()
 	mcisendstring("setaudio seagull volume to "+Str(Int(120)),0,0,0)
 	mcisendstring("setaudio wind volume to "+Str(Int(160)),0,0,0)
 	mcisendstring("setaudio subwater volume to "+Str(Int(600)),0,0,0)
+	mcisendstring("setaudio rain volume to "+Str(Int(750)),0,0,0)
 End Sub
 Sub closesounds()
    mcisendstring("close hello",0,0,0)
@@ -331,6 +336,8 @@ Sub closesounds()
 	mcisendstring("close seagull",0,0,0)
 	mcisendstring("close wind",0,0,0)
 	mcisendstring("close subwater",0,0,0)
+   mcisendstring("close nemo",0,0,0)
+   mcisendstring("close rain",0,0,0)
    mcisendstring("close all",0,0,0)
 End Sub
 Dim Shared As Double twater,twater2,tsubwater 
@@ -371,8 +378,41 @@ Sub stopsoundwind
 		mcisendstring("stop wind",0,0,0)
 	EndIf
 End Sub
+Dim Shared As Double tsoundnemo
+sub soundnemo
+	If Timer>tsoundnemo+210 Then
+		tsoundnemo=Timer+Rnd*210
+		mcisendstring("play nemo from 0",0,0,0)		
+	EndIf
+End Sub
+Sub stopsoundnemo
+	tsoundnemo=Timer-210+Rnd*210
+	mcisendstring("stop nemo",0,0,0)
+End Sub
+Sub stopmusic
+	mcisendstring("stop nemo",0,0,0)
+	guisetfocus("win.graph2")	
+End Sub
+Dim Shared As Integer tsoundrain=0
+Dim Shared As Double timerain
+Sub soundrain
+	If tsoundrain=0 Then
+		tsoundrain=1
+		mcisendstring("play rain from 0 repeat",0,0,0)
+	EndIf
+	timerain=Timer 
+End Sub
+Sub stopsoundrain
+	If tsoundrain=1 And Timer>timerain+5 Then
+		tsoundrain=0
+		mcisendstring("stop rain",0,0,0)
+	EndIf
+End Sub
+Randomize(Timer)
 initsounds()
 'soundseagull
+soundnemo
+If Rnd<0.5 Then stopsoundnemo
 
 
 Dim As String ficin
@@ -421,6 +461,7 @@ i=0:If xmax<1184 Then i=1010-220
 combobox("win.sear",@subsear,1010-i,10,51,500)
 combobox("win.seag",@subseag,1067-i,10,51,500)
 combobox("win.seab",@subseab,1124-i,10,51,500)
+button("win.stopmusic","stop music",@stopmusic,1185-i,11,80,20)
 statictext("win.msg","",72,12,300,20)
 combobox("win.scale2",@subscale2,400,10,80,400)
 'combobox("win.image",@subimage,495,10,80,400)
@@ -530,6 +571,7 @@ guistartOpenGL("win.graph2")
 'Declare Sub testopengl()
 'testopengl()
 Dim Shared As uint mygltext(11),mygltextwave(11),mygltextfire(11),firetext,mygltextshadowfire(11),windtext
+Dim Shared As uint mygltextwaterrain(11)
 Sub inittextures(ii As Integer=1)
 Dim As Integer i=0
 Var nimage=""
@@ -579,6 +621,30 @@ For i=0 To 11
 Next
 printgui("win.msg",Space(200))
 End Sub
+Sub inittextureswaterrain(ii As Integer=1)
+Dim As Integer i=0
+Var nimage=""
+If ii>1 Then nimage=Str(ii)
+'Var fic=(ExePath+"/media/image"+nimage+"/glvideo"+Str(i)+".jpg")
+Var fic=(ExePath+"/media/waterrain/glvideo"+Str(i)+".jpg")
+If FileExists(fic)=0 Then
+	guinotice fic+" not found !"
+	iimage=iimage0
+	selectcomboindex("win.image",iimage)
+   Exit Sub 
+EndIf
+iimage=ii
+iimage0=iimage
+For i=0 To 11
+	If mygltextwaterrain(i)<>0 Then guideletetexture(mygltextwaterrain(i))
+	'mygltextwave(i)=guiloadtexture(ExePath+"/media/image"+nimage+"/glvideo"+Str(i)+".jpg")
+	mygltextwaterrain(i)=guiloadtexture(ExePath+"/media/waterrain/glvideo"+Str(i)+".jpg",254,1,5)
+   guiscan
+   printgui("win.msg","load texturewaterrain "+Str(i))
+   Sleep 100
+Next
+printgui("win.msg",Space(200))
+End Sub
 Sub inittexturesfire(ii As Integer=1)
 Dim As Integer i=0
 Var nimage=""
@@ -612,6 +678,7 @@ End Sub
 inittextures(iimage)
 inittextureswave(iimage)
 inittexturesfire(iimage)
+inittextureswaterrain(iimage)
 
 Const As Single degtorad=ASin(1)/90
 Const As Single radtodeg=90/ASin(1)
@@ -628,7 +695,9 @@ windo1=(Rnd-0.5)*360
 
 While quit=0 And guitestkey(vk_escape)=0
 	guiscan
-   
+	
+	soundnemo()
+    
    If tinitimage=1 Then
    	tinitimage=0
    	inittextures(iimage)
@@ -696,15 +765,23 @@ While quit=0 And guitestkey(vk_escape)=0
     	mz=max(0.0,min(150.0,mz+kfps*0.5))
     	mz1=0
     EndIf
-    If guitestkey(vk_s) Then
+    Var z1=-0.5
+    If guitestkey(vk_s) And (tcanoe=0 Or mz>1) Then
     	 mz1=max(-12.0,mz1-kfps*0.5)    	 
     	 mz=max(-18.0,mz-kfps) 
     	 If tswim=1 Then
-    	 	 mzsub=max(-1.0,mzsub-kfps) 
+    	 	 mzsub=max(z1-1.0,mzsub-kfps) 
           soundwaterwave()   	 
     	 EndIf	 
+    ElseIf time2<twater+0.03 And tswim=1 Then
+    	 mz1=max(-12.0,mz1-kfps*0.11)    	 
+    	 mz=max(-18.0,mz-kfps*0.22) 
+    	 If tswim=1 Then
+    	 	 mzsub=max(z1-1.0,mzsub-kfps*0.22) 
+          'soundwaterwave()   	 
+    	 EndIf	 
     EndIf
-    mzsub=min(0.0,mzsub+0.1*kfps)
+   If mzsub<z1 Then mzsub=min(0.0,mzsub+0.1*kfps)
    If tcanoe=0 Then  
     Var cz=max(-3.0,collidez-12),dz=0.0
     If mx>160 Then dz=Cos(time1*3.1416)*0.35
@@ -729,6 +806,7 @@ While quit=0 And guitestkey(vk_escape)=0
    EndIf
   EndIf  
    If mx>100 Then
+   	If tcanoe>0 Then mz=max(mz,-3.0):tswim=0
    	If Abs(mx-mx0)+Abs(my-my0)+Abs(mz-mz0)+Abs(o10-o1)>1 Then
    		mx0=mx:my0=my:mz0=mz:o10=o1
    		If tcanoe=0 Then
@@ -889,11 +967,14 @@ Sub setmousemx()
 		mousemy=my+mousez*Sin(mouseo1*degtorad)
 	EndIf	
 End Sub
+Dim Shared As Integer testmouse
 Sub drawmouse()
+	testmouse=0
 	If mousemx>99990 Then Exit Sub
 	If max(Abs(mousemx-mx),Abs(mousemy-my))<5 Then
 		mousemx=99999:Exit Sub
 	EndIf
+	testmouse=1
 	Var o10=diro1(mousemx-mx,mousemy-my)
 	Var do1=o10-o1
 	While do1>180:do1-=360:Wend
@@ -1447,6 +1528,261 @@ glcolor4f(1,1,1,1)
 gldisable GL_BLEND
 glenable gl_depth_test
 End Sub
+Dim Shared As Integer train
+Sub drawseawaterrain(ByVal kblend as single=1)
+Dim As Integer i,j,k,ix,iy
+If mz>10.1 Then Exit Sub 
+/'setwavez()
+If mx>1200 Then
+	o22+=(diro1(4,wavez(1,0)-wavez(0,0))-o22)*min(1.0,0.15*kfps) 
+	o33+=(diro1(4,wavez(0,0)-wavez(0,1))-o33)*min(1.0,0.15*kfps)
+	z22+=(wavez(0,0)-z22)*min(1.0,0.15*kfps)
+Else
+	o22=0:o33=0:z22=0
+EndIf '/
+Var dtime=(time1-time0)
+Dim As integer itexture=0
+Dim As Single tx=0.0,ty=0.0,dtx=1.0,dty=1.0
+setvideotexture(dtime,itexture,tx,ty,dtx,dty)
+glenable gl_texture_2D
+glbindtexture gl_texture_2D,mygltextwaterrain(itexture)
+'glbindtexture gl_texture_2D,mygltextwave(itexture)
+glnormal3f(0,0,1)
+gldisable gl_depth_test
+Var r=0.5,g=0.7,b=1.0
+If kblend<0.999 Then 
+	glcolor4f(r,g,b,kblend)
+   glEnable GL_BLEND
+   glBlendFunc GL_SRC_alpha,GL_ONE_MINUS_SRC_alpha
+EndIf 
+glpushmatrix
+If Timer>timewave+0.05 Then 
+ timewave=Timer 
+ dwave+=(mx-mxwave)*cos1+(my-mywave)*sin1
+ mxwave=mx:mywave=my
+EndIf
+Var sc=scale2*0.135'0.13
+Var d30=sc*250.0
+Var d7=7+(dwave-Int(dwave/d30)*d30)
+glTranslatef (mx-d7*cos1,my-d7*sin1,0)
+glrotatef(Int(o1/30-0.5)*30,0,0,1)
+Var n10=10
+For i=-n10 To n10
+	glpushmatrix
+	Var ky=sc*17.8*2*2
+   glTranslatef (0,2*ky*(i/2),0)
+   If ((i+200) Mod 2)=1 Then
+   	glscalef(1,-1,1)
+   EndIf
+  ' glrotatef(90,0,0,1)
+   'glrotatef(90,1,0,0)
+   Var txx=tx,dtxx=dtx,tyy=ty,dtyy=dty
+   'tx=tyy:dtx=dtyy
+   'ty=txx:dty=dtxx
+	Var dx=17.9
+	Var dxx0=25.0*(0.5+0.5*cos2)+0.07
+	Var dz=250.0
+	Var dxx=dxx0-0.5,dxxx=dxx0-1
+	'Var sc=scale2*1.6
+	glscalef(sc,sc*2,1)
+	glcolor4f(r,g,b,1)
+   Dim As Integer n20=20
+   If i>=-1 And i<6 And mx>1200 Then
+   	'glcolor4f(1,0,0,1)
+   	Dim As Single dtxx,dtyy,txx,tyy,txxx,tyyy
+   	dtxx=dtx/n20:dtyy=dty/n20
+   	txx=tx:tyy=ty
+   	If i<=0 Then dxx-=0.02*kwavez
+   	Dim As Single dzz,ddxx,dyy,zzz,zz,xxx,yyy,xx,yy
+   	dzz=(dz+5)/n20:dyy=(dxx-dxxx)/n20:ddxx=(dx+dx)/n20
+   	zz=-5:xx=-dx:yy=dxxx
+      glbegin(gl_quads)
+   	For ix=0 To n20-1
+   		txxx=txx
+   		txx+=dtxx
+   		tyy=ty
+   		zz=-5
+   		xxx=xx
+   		xx+=ddxx
+   		yy=dxxx
+   		For iy=0 To n20-1
+   			tyyy=tyy
+   			tyy+=dtyy
+   			zzz=zz
+   			zz+=dzz
+   			yyy=yy
+   			yy+=dyy
+         	'glbegin(gl_quads)
+         	glTexCoord2f(txxx,tyyy)
+         	'glnormal3f(0,0,1)
+         	glvertex3f(zzz,xxx,yyy+wavez(ix,iy))
+	         gltexcoord2f(txx,tyyy)
+         	'glnormal3f(0,0,1)
+	         glvertex3f(zzz,xx,yyy+wavez(ix+1,iy))
+	         'glcolor4f(0,1,0,1)
+	         glTexCoord2f(txx,tyy)
+         	'glnormal3f(0,0,1)
+         	glvertex3f(zz,xx,yy+wavez(ix+1,iy+1))
+	         gltexcoord2f(txxx,tyy)
+         	'glnormal3f(0,0,1)
+	         glvertex3f(zz,xxx,yy+wavez(ix,iy+1))
+	         'glend()   			
+   		Next
+   	Next
+   	glend()
+   	glcolor4f(r,g,b,1)
+   Else
+    'dxxx-=0.5	
+    'glcolor4f(1,0,0,1)
+	 glbegin(gl_quads)
+	 glTexCoord2f(tx,ty)
+	 glvertex3f(-5,-dx,dxxx)
+	 gltexcoord2f(tx+dtx,ty)
+	 glvertex3f(-5,dx,dxxx)
+	 'glcolor4f(0,1,0,1)
+	 glTexCoord2f(tx+dtx,ty+dty)
+	 glvertex3f(dz,dx,dxx)
+	 gltexcoord2f(tx,ty+dty)
+	 glvertex3f(dz,-dx,dxx)
+	 glend()
+	 /'glbegin(gl_quads)
+	 glTexCoord2f(tx,ty+dty)
+	 glvertex3f(dz,-dx,dxxx)
+	 gltexcoord2f(tx+dtx,ty+dty)
+	 glvertex3f(dz,dx,dxxx)
+	 glTexCoord2f(tx+dtx,ty)
+	 glvertex3f(dz+dz,dx,dxx)
+	 gltexcoord2f(tx,ty)
+	 glvertex3f(dz+dz,-dx,dxx)
+	 glend()'/
+   EndIf 
+   glcolor4f(r,g,b,1)
+   If i>=-1 And i<6 And mx>1200 Then
+   	'glcolor4f(0,1,0,1)	
+	   dxx=dxx0-0.25
+	   dxxx=dxx0-0.5
+   	If i<=0 Then dxxx-=0.02*kwavez
+   	Dim As Single dtxx,dtyy,txx,tyy,txxx,tyyy
+   	dtxx=dtx/n20:dtyy=-dty/n20
+   	txx=tx:tyy=ty+dty
+   	Dim As Single dzz,ddxx,dyy,zzz,zz,xxx,yyy,xx,yy
+   	dzz=(dz)/n20:dyy=(dxx-dxxx)/n20:ddxx=(dx+dx)/n20
+   	zz=dz:xx=-dx:yy=dxxx
+      glbegin(gl_quads)
+   	For ix=0 To n20-1
+   		txxx=txx
+   		txx+=dtxx
+   		tyy=ty+dty
+   		zz=dz
+   		xxx=xx
+   		xx+=ddxx
+   		yy=dxxx
+   		For iy=0 To n20-1
+   			tyyy=tyy
+   			tyy+=dtyy
+   			zzz=zz
+   			zz+=dzz
+   			yyy=yy
+   			yy+=dyy
+   			Var iix=ix,iiy=iy+20
+         	'glbegin(gl_quads)
+         	glTexCoord2f(txxx,tyyy)
+         	'glnormal3f(0,0,1)
+         	glvertex3f(zzz,xxx,yyy+wavez(iix,iiy))
+	         gltexcoord2f(txx,tyyy)
+         	'glnormal3f(0,0,1)
+	         glvertex3f(zzz,xx,yyy+wavez(iix+1,iiy))
+	         'glcolor4f(0,1,0,1)
+	         glTexCoord2f(txx,tyy)
+         	'glnormal3f(0,0,1)
+         	glvertex3f(zz,xx,yy+wavez(iix+1,iiy+1))
+	         gltexcoord2f(txxx,tyy)
+         	'glnormal3f(0,0,1)
+	         glvertex3f(zz,xxx,yy+wavez(iix,iiy+1))
+	         'glend()   			
+   		Next
+   	Next
+	   glend()   			
+   	glcolor4f(r,g,b,1)
+   Else 
+	 'glcolor4f(1,0,0,1)
+	 'tx=txx:dtx=dtxx
+	 'ty=tyy:dty=dtyy
+	 dxx=dxx0-0.25
+	 dxxx=dxx0-0.5'-0.5
+	 glbegin(gl_quads)
+	 glTexCoord2f(tx,ty+dty)
+	 glvertex3f(dz,-dx,dxxx)
+	 gltexcoord2f(tx+dtx,ty+dty)
+	 glvertex3f(dz,dx,dxxx)
+	 glTexCoord2f(tx+dtx,ty)
+	 glvertex3f(dz+dz,dx,dxx)
+	 gltexcoord2f(tx,ty)
+	 glvertex3f(dz+dz,-dx,dxx)
+	 glend()
+	EndIf  
+	glcolor4f(r,g,b,1)
+   'tx=tyy:dtx=dtyy
+   'ty=txx:dty=dtxx	
+   dxx=dxx0
+   dxxx=dxx0-0.25-0.5
+   If 0 Then'i>-1 And i<6 And mx>1200 Then
+   	'glcolor4f(0,1,0,1)	
+   	Dim As Single dtxx,dtyy,txx,tyy,txxx,tyyy
+   	dtxx=dtx/n20:dtyy=-dty/n20
+   	txx=tx:tyy=ty+dty
+   	Dim As Single dzz,ddxx,dyy,zzz,zz,xxx,yyy,xx,yy
+   	dzz=(dz*7)/n20:dyy=(dxx-dxxx)/n20:ddxx=(dx+dx)/n20
+   	zz=dz+dz:xx=-dx:yy=dxxx
+   	For ix=0 To n20-1
+   		txxx=txx
+   		txx+=dtxx
+   		tyy=ty+dty
+   		zz=dz
+   		xxx=xx
+   		xx+=ddxx
+   		yy=dxxx
+   		For iy=0 To n20-1
+   			tyyy=tyy
+   			tyy+=dtyy
+   			zzz=zz
+   			zz+=dzz
+   			yyy=yy
+   			yy+=dyy
+   			Var iix=ix,iiy=iy+40
+         	glbegin(gl_quads)
+         	glTexCoord2f(txxx,tyyy)
+         	glvertex3f(zzz,xxx,yyy+wavez(iix,iiy))
+	         gltexcoord2f(txx,tyyy)
+	         glvertex3f(zzz,xx,yyy+wavez(iix+1,iiy))
+	         'glcolor4f(0,1,0,1)
+	         glTexCoord2f(txx,tyy)
+         	glvertex3f(zz,xx,yy+wavez(iix+1,iiy+1))
+	         gltexcoord2f(txxx,tyy)
+	         glvertex3f(zz,xxx,yy+wavez(iix,iiy+1))
+	         glend()   			
+   		Next
+   	Next
+   	glcolor4f(r,g,b,1)
+   Else	
+	 glbegin(gl_quads)
+	 glTexCoord2f(tx,ty)
+	 glvertex3f(dz+dz,-dx,dxxx)
+	 gltexcoord2f(tx+dtx,ty)
+	 glvertex3f(dz+dz,dx,dxxx)
+	 glTexCoord2f(tx+dtx,ty+dty)
+	 glvertex3f(dz*9,dx,dxx)
+	 gltexcoord2f(tx,ty+dty)
+	 glvertex3f(dz*9,-dx,dxx)
+	 glend()
+	EndIf  
+	glpopmatrix
+Next i
+glpopmatrix
+glcolor4f(1,1,1,1)
+gldisable GL_BLEND
+glenable gl_depth_test
+End Sub
 Sub drawseawave_old(ByVal kblend as single=1)
 Dim As Integer i,j,k 	
 Var dtime=time1-time0
@@ -1625,6 +1961,7 @@ Declare Sub drawcloudshadows()
 Declare Sub drawgrass() 
 Declare Sub drawraindrops()
 Declare Sub drawwind()
+Declare Sub drawrain()
 Dim Shared As Double tdrawraindrops,dtraindrop=2
 Sub drawshadows()
 gldisable gl_depth_test 
@@ -1714,13 +2051,13 @@ Dim As Integer i,j,k
 	glloadidentity
 		 
    yh=28'50'28
-   mx=max(-2400.0-2000,min(2800.0,mx))
+   mx=max(-2400.0-2000,min(3000.0,mx))
    mz=max(-15.0,min(200.0,mz))
    If mz>4 Then
    	o22=0:o33=0:z22=0
    EndIf
    
-   cos1=Cos(o1*degtorad):sin1=Sin(o1*degtorad)
+   If testmouse=0 Then cos1=Cos(o1*degtorad):sin1=Sin(o1*degtorad)
    cos2=Cos((o2+o22)*degtorad):sin2=Sin((o2+o22)*degtorad)
    cos3=Cos((o3+o33)*degtorad):sin3=Sin((o3+o33)*degtorad)
    dmx=cos1*cos2:dmy=sin1*cos2:dmz=sin2
@@ -1777,10 +2114,20 @@ If mx>590 Then
 	Var kblend=max(0.001,(min(mx,1190.0)-590)/600)
    'gldisable gl_lighting
    drawseawave(kblend)
+   If train>=2 Then
+   	drawseawaterrain(kblend*0.4)'0.35)
+   EndIf
 	'If tdark=1 Then glenable gl_lighting
 Else
 	o22=0:o33=0:z22=0
 EndIf
+If train>=2 And mx>590 Then
+	soundrain()
+	drawrain()
+Else
+	stopsoundrain()
+EndIf
+train=0
 If mx>1200 Then
 	soundwind()
 Else
@@ -1830,13 +2177,14 @@ EndIf
    
 	    gldisable gl_depth_test
 	    
-	    drawmouse()
 	    
 	    drawboussole()
      	 If tcanoe=2 Then drawwind()
 
 	cos1=cos1save:sin1=sin1save:o1=o1save
 	    
+	    drawmouse()
+
        If auxtest>0.01 Then  
         If Abs(auxvar)>0.00001 Then gldrawtext("aux= "+Str(auxvar),15,ymax-179,1.2)
         If Abs(auxvar2)>0.00001 Then gldrawtext("aux2= "+Str(auxvar2),15,ymax-199,1.2)
@@ -2725,6 +3073,8 @@ EndIf
 If tcanoe=0 Then
 	drawcanoe0
 	If tswim=0 Then trun=0
+	trun=0
+	'Exit sub
  Var tt=Timer 	
  If guitestkey(vk_up) Then 
  	If tup=0 Then
@@ -2858,7 +3208,8 @@ EndIf
   		   If co1>0 Then
   		   	windprop=(windvv-shipv*(co1+0.115))*kvoile
   		   ElseIf co1>-0.94 Then 
-  		   	windprop=(windvv*(1+1.06*co1)+shipv*(co1-0.115))*kvoile
+  		   	'windprop=(windvv*(1+1.06*co1)+shipv*(co1-0.115))*kvoile
+  		   	windprop=(windvv*(1+1.0*co1)+shipv*(co1-0.115))*kvoile
   		   Else 
   		   	windprop=(windvv*(1+1.19*co1)+shipv*(co1-0.115))*kvoile
   		   EndIf
@@ -2924,7 +3275,7 @@ nshipo3=Sin(time1*2.7)*4
 nshipo2=canoeo2
 nshipo1=-90
 If Abs(nnshipx-mx)<50 Then
-	If Abs(nnshipy-my)<80 Then
+	If Abs(nnshipy-my)<80 And testmouse=0 Then
 		mx-=cos1*5
 		my-=sin1*5
 		Var dxy=(nnshipx-mx)*sin1-(nnshipy-my)*cos1
@@ -3605,7 +3956,7 @@ EndIf
 End Sub
 Dim Shared As Double timecollide
 Sub testcollide()
-If time1<timecollide+0.1 Or testhelen=1 Or testkate=1 Then Exit Sub
+If time1<timecollide+0.1 Or testhelen=1 Or testkate=1 Or testmouse=1 Then Exit Sub
 timecollide=time1
 Dim As Integer i,j,k
 Dim As integer viewport(4)
@@ -3620,7 +3971,7 @@ winx = xmax/2
 winy = ymax/3.5
 If mx>100 Then winy=ymax/20
 If mx>100 Then
-	glReadPixels( winx,Int(ymax/10), 1, 1, GL_RGBA, GL_UNSIGNED_byte, @winpixZ )
+	glReadPixels( winx,Int(ymax/8.5), 1, 1, GL_RGBA, GL_UNSIGNED_byte, @winpixZ )
 	winpixa=(winpixz Shr 24)And 255
 	winpixb=(winpixz Shr 16)And 255
 	winpixg=(winpixz Shr 8)And 255
@@ -3709,7 +4060,6 @@ Sub drawcloud(ByVal i As Integer)
 	      'gltexsphere(800)
 	      glpopmatrix
 End Sub 
-Declare Sub drawrain()
 Dim Shared As Single krain0=1
 Sub drawclouds()
 Dim As Integer i 	
@@ -3773,7 +4123,10 @@ Sub drawcloudshadow(ByVal i As Integer)
 	      'If zz>mz-10 And mz<mzsol00+100 Then Exit Sub 
       Var size=cloudr(i)*2.5
 		rotavion(xx-mx,yy-my,zz-mz)
-		if x2>(0.9*max(y2,z2)-size-4000) Then
+		if x2>(0.9*max(Abs(y2),Abs(z2))-size-4000) Then
+			If max(Abs(xx-mx),Abs(yy-my))<cloudr(i)*0.5 Then
+				train+=1
+			EndIf
 	      Var cc=0.4
 	      'cc=1
       	'cc*=min(1.0,max(0.001,0.25*9000/(1000+Abs(xx-mx)+Abs(yy-my))))
@@ -3827,6 +4180,26 @@ glEnable GL_DEPTH_TEST
 'gldisable gl_cull_face	
 'gldisable gl_alpha_test
 EndIf 
+End Sub
+Dim Shared As uint raintext 
+Sub drawrain()
+If raintext=0 Then
+	raintext=guiloadtexture(ExePath+"/media/rain.jpg")	
+EndIf
+gldisable GL_DEPTH_TEST
+glEnable GL_BLEND
+glBlendFunc GL_SRC_color,GL_ONE_MINUS_SRC_color
+glcolor3f(1,1,1)
+glenable(gl_texture_2d)
+glbindtexture(gl_texture_2d,raintext)
+glpushmatrix
+glplacecursor(xmax/2,ymax/2)
+Var vt=1.5,dt=((Timer*vt-Int(Timer*vt))*4)
+gltexcarre4(80,60,dt,0.5)
+glpopmatrix 
+gldisable gl_blend 
+glenable GL_DEPTH_TEST	
+glcolor3f(1,1,1)
 End Sub
 Const As Integer ngrass=2500
 Dim Shared As Single distgrass=350,waterz=-1
