@@ -72,7 +72,7 @@ Dim Shared As String resp
 Sub mysubquit
 	quit=1
 End Sub
-dim shared as Single sear=1,seag=1,seab=1
+dim shared as Single sear=1,seag=1,seab=1,seaa=1
 Sub subsear
 Dim As Integer i  
 getcomboindex("win.sear",i)
@@ -89,6 +89,12 @@ Sub subseab
 Dim As Integer i  
 getcomboindex("win.seab",i)
 seab=0.5+(i)*0.01
+Sleep 100	
+End Sub
+Sub subseaa
+Dim As Integer i  
+getcomboindex("win.seaa",i)
+seaa=0+(i)*0.01
 Sleep 100	
 End Sub
 Dim Shared As Single scale2=2
@@ -315,6 +321,8 @@ Sub initsounds()
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias nemo",0,0,0)
    soundfic="sounds/rain.mp3"
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias rain",0,0,0)
+   soundfic="sounds/beethoven4.mp3"
+   mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias beethoven",0,0,0)
    mcisendstring("play hello from 0",0,0,0)
    mcisendstring("play ocean from 0 repeat",0,0,0)
    mcisendstring("play nature from 0 repeat",0,0,0)
@@ -338,6 +346,7 @@ Sub closesounds()
 	mcisendstring("close subwater",0,0,0)
    mcisendstring("close nemo",0,0,0)
    mcisendstring("close rain",0,0,0)
+   mcisendstring("close beethoven",0,0,0)
    mcisendstring("close all",0,0,0)
 End Sub
 Dim Shared As Double twater,twater2,tsubwater 
@@ -378,19 +387,33 @@ Sub stopsoundwind
 		mcisendstring("stop wind",0,0,0)
 	EndIf
 End Sub
-Dim Shared As Double tsoundnemo
+Dim Shared As Double tsoundnemo,tsoundnemo0,t210=280
 sub soundnemo
-	If Timer>tsoundnemo+210 Then
-		tsoundnemo=Timer+Rnd*210
-		mcisendstring("play nemo from 0",0,0,0)		
+	If Timer>tsoundnemo+t210 Then
+		If Rnd<0.25 Then
+			mcisendstring("play nemo from 0",0,0,0)
+			t210=210
+		Else 			
+			mcisendstring("play beethoven from 0",0,0,0)
+			t210=324
+		EndIf
+		tsoundnemo0=Timer 
+		tsoundnemo=Timer+Rnd*180
 	EndIf
 End Sub
 Sub stopsoundnemo
-	tsoundnemo=Timer-210+Rnd*210
+	tsoundnemo=Timer-t210+Rnd*180
 	mcisendstring("stop nemo",0,0,0)
+	mcisendstring("stop beethoven",0,0,0)
 End Sub
 Sub stopmusic
+	If Timer>tsoundnemo0+t210 Or tsoundnemo>Timer+9999 Then
+		tsoundnemo=Timer-t210
+		Exit sub
+	EndIf
+	tsoundnemo=Timer+99999
 	mcisendstring("stop nemo",0,0,0)
+	mcisendstring("stop beethoven",0,0,0)
 	guisetfocus("win.graph2")	
 End Sub
 Dim Shared As Integer tsoundrain=0
@@ -443,6 +466,8 @@ If Not Eof(file) Then Line Input #file,ficin:seag=Val(ficin)
 If Not Eof(file) Then Line Input #file,ficin:seab=Val(ficin)
 ncloud2=150
 If Not Eof(file) Then Line Input #file,ficin:ncloud2=Val(ficin)
+seaa=1
+If Not Eof(file) Then Line Input #file,ficin:seaa=Val(ficin)
 Close #file
 
 shipo1=canoeo1
@@ -461,7 +486,8 @@ i=0:If xmax<1184 Then i=1010-220
 combobox("win.sear",@subsear,1010-i,10,51,500)
 combobox("win.seag",@subseag,1067-i,10,51,500)
 combobox("win.seab",@subseab,1124-i,10,51,500)
-button("win.stopmusic","stop music",@stopmusic,1185-i,11,80,20)
+combobox("win.seaa",@subseaa,1181-i,10,51,500)
+button("win.stopmusic","music",@stopmusic,1236-i,11,65,20)
 statictext("win.msg","",72,12,300,20)
 combobox("win.scale2",@subscale2,400,10,80,400)
 'combobox("win.image",@subimage,495,10,80,400)
@@ -545,6 +571,12 @@ For i=0 To 49
 Next
 selectcomboindex("win.seab",Int(seab*100-50+0.1))
 
+For i=0 To 99
+	addcombo("win.seaa","A"+Str(i+0))
+Next
+selectcomboindex("win.seaa",Int(seaa*100-0+0.1))
+
+
 'setforegroundwindow(getguih("win"))
 guisetfocus("win.quit")
 Dim Shared As hwnd winh,winmsg
@@ -571,7 +603,7 @@ guistartOpenGL("win.graph2")
 'Declare Sub testopengl()
 'testopengl()
 Dim Shared As uint mygltext(11),mygltextwave(11),mygltextfire(11),firetext,mygltextshadowfire(11),windtext
-Dim Shared As uint mygltextwaterrain(11)
+Dim Shared As uint mygltextwaterrain(11),mygltext0(11)
 Sub inittextures(ii As Integer=1)
 Dim As Integer i=0
 Var nimage=""
@@ -588,9 +620,12 @@ iimage=ii
 iimage0=iimage
 For i=0 To 11
 	If mygltext(i)<>0 Then guideletetexture(mygltext(i))
+	If mygltext0(i)<>0 Then guideletetexture(mygltext0(i))
 	'mygltext(i)=guiloadtexture(ExePath+"/media/image"+nimage+"/glvideo"+Str(i)+".jpg")
-	mygltext(i)=guiloadtexture(ExePath+"/media/seashore/glvideo"+Str(i)+".jpg",200,230,5)
-	'mygltext(i)=guiloadtexture(ExePath+"/media/seashore/glvideo"+Str(i)+".jpg",200,230,7)
+	mygltext(i)=guiloadtexture(ExePath+"/media/seashore/glvideo"+Str(i)+".jpg",0,255)
+	mygltext0(i)=guiloadtexture(ExePath+"/media/seashore/glvideo"+Str(i)+".jpg",200,230,5)
+	'mygltext(i)=guiloadtexture(ExePath+"/media/seashore/glvideo"+Str(i)+".jpg",200,230,5)
+	''mygltext(i)=guiloadtexture(ExePath+"/media/seashore/glvideo"+Str(i)+".jpg",200,230,7)
    guiscan
    printgui("win.msg","load texture "+Str(i))
    Sleep 100
@@ -855,6 +890,7 @@ Print #file,sear
 Print #file,seag
 Print #file,seab
 Print #file,ncloud2
+Print #file,seaa
 Close #file	
 
 Sleep 1000
@@ -1022,7 +1058,7 @@ Dim As single dx=-3000,dxx=-2000,dtx=3.5,dty=5,tx=0,ty=0
 	glpopmatrix
 	glcolor3f(1,1,1)
 End Sub
-Sub setvideotexture(ByVal dtime As Double,ByRef itexture As Integer,ByRef tx As Single,ByRef ty As Single, _  
+Sub setvideotexture_ok(ByVal dtime As Double,ByRef itexture As Integer,ByRef tx As Single,ByRef ty As Single, _  
 	                 ByRef dtx As Single,ByRef dty As Single)
 	itexture=Int(dtime)Mod 12
 	'glbindtexture gl_texture_2D,mygltext(itexture)
@@ -1033,6 +1069,21 @@ Sub setvideotexture(ByVal dtime As Double,ByRef itexture As Integer,ByRef tx As 
 	ty=(3-iy)/4
 	dtx=1/2:dty=0.86/4         
 End Sub
+Sub setvideotexture(ByVal dtime As Double,ByRef itexture As Integer,ByRef tx As Single,ByRef ty As Single, _  
+	                 ByRef dtx As Single,ByRef dty As Single,ByVal dx As single=0,ByVal dy As single=0,ByVal dy0 As single=0)
+	itexture=max2(0,min2(11,(Int(dtime) Mod 12)))
+	'glbindtexture gl_texture_2D,mygltext(itexture)
+	Var dtime1=dtime-Int(dtime)
+	Var ix=Int(dtime1*2)
+	Var iy=Int((dtime1*2-ix)*4)
+	var videodx=4*Int(512\4)
+	Var videody=4*Int(256\4)
+	tx=(ix)/2+dx/videodx
+	ty=(3-iy)/4+dy0/videody
+	dtx=1/2-dx*2/videodx
+	dty=1/4-dy*2/videody         
+	'dty=0.86/4-dy*2/videody         
+End Sub
 Dim Shared As Integer tdrawrain
 Sub drawsea0(ddx As Single=0)
 Dim As Integer i,j,k,p
@@ -1040,10 +1091,15 @@ Var dz0=-50.0,dzz0=-50.0,dzz=-50.0,dz=-50.0
 Var dtime=time1-time0
 Dim As integer itexture=0
 Dim As Single tx=0.0,ty=0.0,dtx=1.0,dty=1.0
-setvideotexture(dtime,itexture,tx,ty,dtx,dty)
+setvideotexture(dtime,itexture,tx,ty,dtx,dty,1.5,8.5)
 glenable gl_texture_2D
 If tdrawrain=0 Then  
-  glbindtexture gl_texture_2D,mygltext(itexture)
+ If tdark=1 Or seaa>0.90 Then
+ 	gldisable gl_blend
+ 	glbindtexture gl_texture_2D,mygltext0(itexture)
+ Else 	
+ 	glbindtexture gl_texture_2D,mygltext(itexture)
+ EndIf
 Else 
   glbindtexture gl_texture_2D,mygltextwaterrain(itexture)
 EndIf  
@@ -1080,8 +1136,8 @@ For i=-n30 To n30
 	Var dx=17.9
 	Var dxx=0.0
 	Var kcos=1.25*(1-cos1*0.25)
-	Var kcos2=1.0
-	If mx<270 Then kcos2=max(0.0,(5+cos1)/6)
+	Var kcos2=1.0,x270=270.0
+	If mx<x270 Then kcos2=max(0.0,(5+cos1)/6)
 	If mx>330 Then dxx=-dx*kcos*kcos2
 	'Var sc=scale2*1.6
 	glscalef(sc,sc,1)
@@ -1095,7 +1151,7 @@ For i=-n30 To n30
 	gltexcoord2f(tx,ty+dty)
 	glvertex3f(dzz,-dx,(dx+dx-Abs(dzz*1.6)-7)*kcos2)
 	glend()
-	If mx+ddx>270 Then dxx=-dx*0.5
+	If mx+ddx>x270 Then dxx=-dx*0.5
 	If mx>330 Then dxx=-dx*1.1
 	Var d7=0.3*dx*Sgn(dzz)
 	glbegin(gl_quads)
@@ -1108,7 +1164,8 @@ For i=-n30 To n30
 	gltexcoord2f(tx,ty+dty)
 	glvertex3f(dzz*4,-dx-d7,dx*1.4*kcos2)
 	glend()
-	If mx+ddx>270 Then dxx=-dx
+ If mx>x270 Then 
+	If mx+ddx>x270 Then dxx=-dx
 	If mx>330 Then dxx=-dx*1.2
 	glbegin(gl_quads)
 	glTexCoord2f(tx,ty)
@@ -1130,6 +1187,7 @@ For i=-n30 To n30
 	gltexcoord2f(tx,ty+dty)
 	glvertex3f(dzz*10,-dx-d7,dx*1.5*kcos2)
 	glend()
+ EndIf 	
 	glpopmatrix
 Next i
 glpopmatrix
@@ -1174,7 +1232,7 @@ For i=-n30 To n30
 	Var tx=(ix)/2
 	Var ty=(3-iy)/4,dtx=1/2,dty=0.86/4'/
 	Var dx=17.9
-	Var dxx=0.0
+	Var dxx=0.0,x270=270
 	Var kcos=1.25*(1-cos1*0.25)
 	If mx>330 Then dxx=-dx*kcos
 	'Var sc=scale2*1.6
@@ -1189,7 +1247,7 @@ For i=-n30 To n30
 	gltexcoord2f(tx,ty+dty)
 	glvertex3f(dzz,-dx,dx+dx-Abs(dzz*1.6)-7)
 	glend()
-	If mx+ddx>270 Then dxx=-dx*0.5
+	If mx+ddx>x270 Then dxx=-dx*0.5
 	If mx>330 Then dxx=-dx*1.1
 	Var d7=0.3*dx*Sgn(dzz)
 	glbegin(gl_quads)
@@ -1202,7 +1260,7 @@ For i=-n30 To n30
 	gltexcoord2f(tx,ty+dty)
 	glvertex3f(dzz*4,-dx-d7,dx*1.4)
 	glend()
-	If mx+ddx>270 Then dxx=-dx
+	If mx+ddx>x270 Then dxx=-dx
 	If mx>330 Then dxx=-dx*1.2
 	glbegin(gl_quads)
 	glTexCoord2f(tx,ty)
@@ -2094,7 +2152,11 @@ cos1=tcos1:sin1=tsin1:o1=o1+heado1
 
 	drawsand()
 
-glcolor4f(sear,seag,seab,1)	
+glcolor4f(sear,seag,seab,seaa)	
+If seaa<0.999 Then 
+   glEnable GL_BLEND
+   glBlendFunc GL_src_alpha,GL_ONE_MINUS_SRC_alpha
+EndIf    
 If mx<1200 Or mz>8 Then 
 	Var dmmx=Int(mx/100)*100
 	If mx<500 Or mz>8 Then
@@ -2111,6 +2173,7 @@ If mx<1200 Or mz>8 Then
    If mx>220 Or mz>30 Then
 	   drawsea0(140)
    EndIf
+   gldisable gl_blend 
    If train>=2 Then'Or (Int(mx/10)And 1) Then
    	tdrawrain=1
    	glpopmatrix
@@ -2133,14 +2196,15 @@ If mx<1200 Or mz>8 Then
    EndIf
 	glpopmatrix
 EndIf
+gldisable gl_blend 
 Var tdrawship=0
 If mx>nshipx+600 Then tdrawship=1:drawnship()
 If mx>590 Then
 	Var kblend=max(0.001,(min(mx,1190.0)-590)/600)
    'gldisable gl_lighting
-   drawseawave(kblend)
+   drawseawave(kblend*seaa)
    If train>=2 Then
-   	drawseawaterrain(kblend*0.4)'0.35)
+   	drawseawaterrain(0.6)'kblend*0.4)'0.35)
    EndIf
 	'If tdark=1 Then glenable gl_lighting
 Else
@@ -3124,10 +3188,10 @@ If tcanoe=0 Then
     'canoeo2+=(4-canoeo2)*min(0.9,0.1715*kfps)
     soundwaterwave()
     soundwaterwave2()
-    If tswim=1 Then
+    If tswim=1 Or mycolor>avgcolor*1.4 Then
     	soundsubwater(2)
       'Var mycolor2=(winpixr2+winpixg2+winpixb2)*0.33+10
-    	if mycolor>avgcolor*1.35 Then'1.4 Then
+    	if mycolor>avgcolor*1.305 Then'1.4 Then
     		If tdrawraindrops+dtraindrop<Timer Then tdrawraindrops=Timer 
     	EndIf
     EndIf
