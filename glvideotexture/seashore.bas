@@ -1032,10 +1032,11 @@ Sub drawmouse()
 	glenable gl_texture_2d
 	glpopmatrix
 End Sub
-Dim Shared As Single xmaree=0
-Dim Shared As Double timemaree
+Dim Shared As Single xmaree=0,xmaree0,colormaree=0.75
+Dim Shared As Double timemaree,timemaree0,timehour
 Sub setxmaree()
-If Timer<timemaree+1 Then Exit Sub
+Dim As Integer i,j,k	
+If Timer<timemaree+0.3 Then Exit Sub
 timemaree=Timer 	
 Var heuremaree=heure'Val(Left(Time,2))+Val(Mid(Time(),4,2))/60
 Var dayjj=Val(Mid(Date,4,2))+Val(left(Date,2))*365/12+Val(Right(date,4))*365
@@ -1043,6 +1044,35 @@ heuremaree+=dayjj*24
 xmaree=100+(1-Abs(Cos(360*degtorad*(heuremaree*(1+1/28)/24))))*800
 'xmaree=600
 x100=xmaree
+If timehour>timemaree0+3600*8 Then timehour=heure*3600-3600*9 
+if timehour<heure*3600-3600*8 Then
+	Var xmaree20=0.0
+	timehour=max(0.0,heure*3600-3600*12)
+	For i=1 To 100000
+		If timehour>=heure*3600-1 Then Exit For 
+      Var heuremaree2=timehour/3600+dayjj*24
+      Var xmaree2=100+(1-Abs(Cos(360*degtorad*(heuremaree2*(1+1/28)/24))))*800		
+		If xmaree2>xmaree20 Then
+			timemaree=timehour
+		EndIf
+		xmaree20=xmaree2
+		timehour+=1
+	Next
+   timehour=heure*3600
+Else    
+   timehour=heure*3600
+EndIf
+If xmaree>xmaree0 Then'descending
+	timemaree0=timehour'timemaree
+	colormaree=0.74
+Else
+	timemaree0=min(timehour,timemaree0)
+	colormaree=0.74+0.04*max(0.0,min(1.0,(timehour-timemaree0)/(3600*(1-1/28)*6)))
+EndIf
+'colormaree=0.78
+xmaree0=xmaree
+'auxvar=colormaree
+'auxvar2=timehour-timemaree0
 End Sub
 Dim Shared As uint sandtext
 Sub drawsand
@@ -1069,7 +1099,8 @@ Dim As single dx=-3000,dxx=-2000,dtx=3.5,dty=5,tx=0,ty=0
 	glvertex3f(-dxx,dx,0)
 	glend()
 	Var c1=0.6
-	cc=0.75
+	'cc=0.75
+	cc=colormaree
    glcolor3f(c1,c1,c1)
 	gltranslatef(-dx+100,0,1)
 	glbegin(gl_quads)
@@ -3350,8 +3381,9 @@ EndIf
   		   	windprop=(windvv*(1+1.19*co1)+shipv*(co1-0.115))*kvoile
   		   EndIf
   		   Var kmass=0.02
-  		   shipv+=(windprop-0.1*shipv)*kfps*kmass
-  		   shipv=max(-5.0,min(5.0,shipv))
+  		   shipv+=(windprop*kmass-0.001*shipv)*kfps'*kmass
+  		   'shipv+=(windprop-0.1*shipv)*kfps*kmass
+  		   shipv=max(-3.0,min(6.0,shipv))
   		   ksail=shipv/5.0
   		   trun=0
   		   prop=windprop:vprop=shipv
