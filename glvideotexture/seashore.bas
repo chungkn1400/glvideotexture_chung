@@ -235,7 +235,7 @@ Sub subhelp
 Var msg="scale => sea scale"
 msg+=crlf+"blue...red => bikini color"
 msg+=crlf+"wavez => deep ocean wave heights"
-msg+=crlf+"arrows => move"
+msg+=crlf+"arrows,mouse => move"
 msg+=crlf+"pageup,down => look up/down"
 msg+=crlf+"C => canoe,sail on/off"
 msg+=crlf+"Z,S => fly up/down"
