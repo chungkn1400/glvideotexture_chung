@@ -248,10 +248,10 @@ guinotice msg
 time0=timer
 End Sub
 Dim Shared As Integer tcanoe
-Dim Shared As Single canoex,canoey,canoez,canoeo1,canoeo2,canoeo3,shipx,shipy,shipz,shipo1,shipo2,shipo3
+Dim Shared As Single canoex,canoey,canoez,canoeo1,canoeo2,canoeo3,shipx,shipy,shipz,shipo1,shipo2,shipo3,x100=100
 Sub subcanoe
 tcanoe=(tcanoe+1)Mod 3
-If tcanoe=2 And mx<100 Then tcanoe=0
+If tcanoe=2 And mx<x100 Then tcanoe=0
 shipo1=canoeo1
 shipo2=canoeo2
 shipo3=canoeo3
@@ -780,13 +780,13 @@ While quit=0 And guitestkey(vk_escape)=0
     If guitestkey(vk_c) And guitestkey(vk_control)=0 Then subcanoe():Sleep 200
     If guitestkey(vk_c) And guitestkey(vk_control) Then subncloud():Sleep 200
     If (guitestkey(vk_up) Or (mouseforward And tmm))And trun=0 Then
-    	 Var kkfps=kfps:If mx>100 Then kkfps*=0.3*1.4
+    	 Var kkfps=kfps:If mx>x100 Then kkfps*=0.3*1.4
     	 If tswim=1 Then kkfps*=0.40+0.3*Cos(time1)*Cos(time1)
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
     	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
     EndIf
     If trun=1 Then
-    	 Var kkfps=kfps:If mx>100 Then kkfps*=0.2*1.4
+    	 Var kkfps=kfps:If mx>x100 Then kkfps*=0.2*1.4
     	 If tswim=1 Then kkfps*=0.15+0.3*Cos(time1)*Cos(time1)
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
     	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
@@ -840,7 +840,7 @@ While quit=0 And guitestkey(vk_escape)=0
   	 EndIf
    EndIf
   EndIf  
-   If mx>100 Then
+   If mx>x100 Then
    	If tcanoe>0 Then mz=max(mz,-3.0):tswim=0
    	If Abs(mx-mx0)+Abs(my-my0)+Abs(mz-mz0)+Abs(o10-o1)>1 Then
    		mx0=mx:my0=my:mz0=mz:o10=o1
@@ -1032,8 +1032,21 @@ Sub drawmouse()
 	glenable gl_texture_2d
 	glpopmatrix
 End Sub
+Dim Shared As Single xmaree=0
+Dim Shared As Double timemaree
+Sub setxmaree()
+If Timer<timemaree+1 Then Exit Sub
+timemaree=Timer 	
+Var heuremaree=heure'Val(Left(Time,2))+Val(Mid(Time(),4,2))/60
+Var dayjj=Val(Mid(Date,4,2))+Val(left(Date,2))*365/12+Val(Right(date,4))*365
+heuremaree+=dayjj*24
+xmaree=100+(1-Abs(Cos(360*degtorad*(heuremaree*(1+1/28)/24))))*800
+'xmaree=600
+x100=xmaree
+End Sub
 Dim Shared As uint sandtext
 Sub drawsand
+setxmaree()	
 If sandtext=0 Then sandtext=guiloadtexture(ExePath+"/media/sand.jpg")
 glbindtexture gl_texture_2D,sandtext
 Dim As single dx=-3000,dxx=-2000,dtx=3.5,dty=5,tx=0,ty=0
@@ -1053,6 +1066,24 @@ Dim As single dx=-3000,dxx=-2000,dtx=3.5,dty=5,tx=0,ty=0
 	glvertex3f(dx,dx,0)
 	gltexcoord2f(tx,ty+dty)
 	glcolor3f(1,1,1)
+	glvertex3f(-dxx,dx,0)
+	glend()
+	Var c1=0.6
+	cc=0.75
+   glcolor3f(c1,c1,c1)
+	gltranslatef(-dx+100,0,1)
+	glbegin(gl_quads)
+	glTexCoord2f(tx,ty)
+	glcolor3f(c1,c1,c1)
+	glvertex3f(-dxx,-dx,0)
+	gltexcoord2f(tx+dtx,ty)
+   glcolor3f(cc,cc,cc)
+	glvertex3f(dx,-dx,0)
+	glTexCoord2f(tx+dtx,ty+dty)
+   glcolor3f(cc,cc,cc)
+	glvertex3f(dx,dx,0)
+	gltexcoord2f(tx,ty+dty)
+	glcolor3f(c1,c1,c1)
 	glvertex3f(-dxx,dx,0)
 	glend()
 	glpopmatrix
@@ -1137,7 +1168,8 @@ For i=-n30 To n30
 	Var dxx=0.0
 	Var kcos=1.25*(1-cos1*0.25)
 	Var kcos2=1.0,x270=270.0
-	If mx<x270 Then kcos2=max(0.0,(5+cos1)/6)
+	If mx<x270 Then kcos2=max(0.0,min(1.0,(5+Abs(cos1))/5.3))
+	'If mx<x270 Then kcos2=max(0.0,(5+cos1)/6)
 	If mx>330 Then dxx=-dx*kcos*kcos2
 	'Var sc=scale2*1.6
 	glscalef(sc,sc,1)
@@ -2157,6 +2189,10 @@ If seaa<0.999 Then
    glEnable GL_BLEND
    glBlendFunc GL_src_alpha,GL_ONE_MINUS_SRC_alpha
 EndIf    
+glpushmatrix
+gltranslatef(xmaree-100,0,0)
+Var mxsave=mx
+mx-=xmaree-100
 If mx<1200 Or mz>8 Then 
 	Var dmmx=Int(mx/100)*100
 	If mx<500 Or mz>8 Then
@@ -2196,7 +2232,7 @@ If mx<1200 Or mz>8 Then
    EndIf
 	glpopmatrix
 EndIf
-gldisable gl_blend 
+gldisable gl_blend
 Var tdrawship=0
 If mx>nshipx+600 Then tdrawship=1:drawnship()
 If mx>590 Then
@@ -2210,6 +2246,8 @@ If mx>590 Then
 Else
 	o22=0:o33=0:z22=0
 EndIf
+glpopmatrix
+mx=mxsave
 If train>=2 And mx>0 Then'590 Then
 	soundrain()
 	drawrain()
@@ -2252,7 +2290,7 @@ EndIf
 	drawsmokes()
    glnormal3f(0,0,1)
 
-   If o2>-45 Then'and mx<100
+   If o2>-45 Then'and mx<x100
    	testcollide()
    EndIf
 	
@@ -3137,7 +3175,7 @@ glbindtexture(GL_TEXTURE_2D,canoetext)
      If x2>(0.9*max(Abs(y2),Abs(z2))-200) Then 	
       'glClear (GL_DEPTH_BUFFER_BIT)
     	glpushmatrix
-  		If canoex<100 Then
+  		If canoex<x100 Then
   			gltranslatef(canoex,canoey,0)
   		Else 	
   			gltranslatef(canoex,canoey,canoez)
@@ -3202,7 +3240,7 @@ canoex=mx:canoey=my:canoez=max(18.5,collidez+3)
 If mx<1200 Then
 	canoez+=-7-1-sin2*3
 EndIf
-If mx<100 Then
+If mx<x100 Then
 	canoez=8
 	canoeo1=o1:canoeo2=0:canoeo3=0
 	trun=0
@@ -3862,7 +3900,7 @@ If x2>0.9*max(Abs(y2),Abs(z2))-300 Then
 	Var x0=canoex+40*co1
 	Var y0=canoey+40*si1
 	Var z0=1
-	If canoex>100 Then z0=canoez
+	If canoex>x100 Then z0=canoez
 	Var h=35.0
 	Var x1=x0+h*sunco1*suntan2
 	Var y1=y0+h*sunsi1*suntan2
@@ -3962,7 +4000,7 @@ If x2>0.9*max(Abs(y2),Abs(z2))-500 Then
 	Var x0=nshipx+40*co1
 	Var y0=nshipy+40*si1
 	Var z0=1
-	If nshipx>100 Then z0=nshipz
+	If nshipx>x100 Then z0=nshipz
 	Var h=35.0
 	Var x1=x0+h*sunco1*suntan2
 	Var y1=y0+h*sunsi1*suntan2
@@ -4067,8 +4105,8 @@ glGetDoublev( GL_PROJECTION_MATRIX, @projection(0) )
 glGetIntegerv( GL_VIEWPORT, @viewport(0) )
 winx = xmax/2
 winy = ymax/3.5
-If mx>100 Then winy=ymax/20
-If mx>100 Then
+If mx>x100 Then winy=ymax/20
+If mx>x100 Then
 	glReadPixels( winx,Int(ymax/8.5), 1, 1, GL_RGBA, GL_UNSIGNED_byte, @winpixZ )
 	winpixa=(winpixz Shr 24)And 255
 	winpixb=(winpixz Shr 16)And 255
@@ -4089,7 +4127,7 @@ gluUnProject(winX,winY,winz,@modelview(0),@projection(0),@viewport(0),@posX,@pos
 'glpopmatrix
 Var dist=((posx-mx)*cos1*cos2+(posy-my)*sin1*cos2+(posz-mz)*sin2)
 'Var dist=sqr((posx-mx)*(posx-mx)+(posy-my)*(posy-my)+(posz-mz)*(posz-mz))
-If dist<12 And dist>0 And mx<100 Then
+If dist<12 And dist>0 And mx<x100 Then
 	mx-=5*cos1
 	my-=5*sin1
 EndIf
@@ -4099,7 +4137,7 @@ collidey=posy
 If max(Abs(collidex-mx),Abs(collidey-my))<30.0 Then
 	collidez=posz
 EndIf
-If collidez-collidez0<-1 And mx>100 Then
+If collidez-collidez0<-1 And mx>x100 Then
 	mx+=7*cos1
 	my+=7*sin1
 EndIf
