@@ -476,19 +476,20 @@ shipo3=canoeo3
 
 Dim Shared As Integer wx,wy,depth
 ScreenInfo wx,wy,depth
+'wx=1024:wy=600
 
 xmax=wx-20:ymax=wy-30-256+172
 guibackgroundcolor(0,0,100)
 guistatictextinkcolor(200,200,200)
-button("win.quit","quit",@mysubquit,10,10,50,20)
+button("win.quit","quit",@mysubquit,10,10,40,20)
 'button("win.pause","pause",@subpause,70,10,50,20)
-i=0:If xmax<1184 Then i=1010-220
+i=0:If xmax<1184 Then i=1010-220+110
 combobox("win.sear",@subsear,1010-i,10,51,500)
 combobox("win.seag",@subseag,1067-i,10,51,500)
 combobox("win.seab",@subseab,1124-i,10,51,500)
 combobox("win.seaa",@subseaa,1181-i,10,51,500)
-button("win.stopmusic","music",@stopmusic,1236-i,11,65,20)
-statictext("win.msg","",72,12,300,20)
+button("win.stopmusic","music",@stopmusic,1236-i,11,63,20)
+statictext("win.msg","",62,12,130,20)
 combobox("win.scale2",@subscale2,400,10,80,400)
 'combobox("win.image",@subimage,495,10,80,400)
 combobox("win.hour",@subhour,495,10,60,500)
@@ -675,7 +676,7 @@ For i=0 To 11
 	'mygltextwave(i)=guiloadtexture(ExePath+"/media/image"+nimage+"/glvideo"+Str(i)+".jpg")
 	mygltextwaterrain(i)=guiloadtexture(ExePath+"/media/waterrain/glvideo"+Str(i)+".jpg",254,1,5)
    guiscan
-   printgui("win.msg","load texturewaterrain "+Str(i))
+   printgui("win.msg","load textwaterrain "+Str(i))
    Sleep 100
 Next
 printgui("win.msg",Space(200))
