@@ -3457,8 +3457,12 @@ If Abs(nnshipx-mx)<50 Then
 		Var dxy=(nnshipx-mx)*sin1-(nnshipy-my)*cos1
 		If dxy>0 Then
 			o1+=7
+			mx-=sin1*4
+			my+=cos1*4
 		Else
 			o1-=7
+			mx+=sin1*4
+			my-=cos1*4
 		EndIf
 	EndIf
 EndIf
