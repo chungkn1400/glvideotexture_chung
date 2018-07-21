@@ -750,7 +750,7 @@ While quit=0 And guitestkey(vk_escape)=0
 		printguih(winmsg,"fps "+Str(Int(fps))+"          ")
 		tactive=0
 		If winh=getactivewindow() Then tactive=1
-		Var vol=max(5.0,min(1000.0,1000*200/max(200.0,330-mx)))
+		Var vol=max(5.0,min(1000.0,1000*200/max(200.0,330-mx+(x100-100)*0.6)))
 		mcisendstring("setaudio ocean volume to "+Str(Int(vol)),0,0,0)
 		vol=max(5.0,min(1000.0,230*110/max(100.0,1100+mx)))
 		mcisendstring("setaudio nature volume to "+Str(Int(vol)),0,0,0)
