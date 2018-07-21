@@ -1403,9 +1403,11 @@ For n=0 To 7' Step 2'2'7
 	Next
 Next
 End Sub
+Dim Shared As Integer tseawave
 Sub drawseawave(ByVal kblend as single=1)
 Dim As Integer i,j,k,ix,iy
-If mz>10.1 Then Exit Sub 
+If mz>10.1 Then Exit Sub
+tseawave=1 
 setwavez()
 If mx>1200 Then
 	o22+=(diro1(4,wavez(1,0)-wavez(0,0))-o22)*min(1.0,0.15*kfps) 
@@ -2265,8 +2267,7 @@ If mx<1200 Or mz>8 Then
 	glpopmatrix
 EndIf
 gldisable gl_blend
-Var tdrawship=0
-If mx>nshipx+600 Then tdrawship=1:drawnship()
+tseawave=0
 If mx>590 Then
 	Var kblend=max(0.001,(min(mx,1190.0)-590)/600)
    'gldisable gl_lighting
@@ -2317,7 +2318,6 @@ EndIf
 	drawkate()
 	drawseagull()
 	drawcabane()
-	If tdrawship=0 Then drawnship()
 	drawfire()
 	drawsmokes()
    glnormal3f(0,0,1)
@@ -2325,6 +2325,10 @@ EndIf
    If o2>-45 Then'and mx<x100
    	testcollide()
    EndIf
+
+   Var tdrawship=0
+   'If mx>nshipx+600 Then tdrawship=1:drawnship()
+	If tdrawship=0 Then drawnship()
 	
 	cos1=cos1save:sin1=sin1save:o1=o1save
 	drawcanoe()
@@ -2338,7 +2342,7 @@ EndIf
 	    
 	    
 	    drawboussole()
-     	 If tcanoe=2 Then drawwind()
+     	 drawwind()
 
 	cos1=cos1save:sin1=sin1save:o1=o1save
 	    
@@ -3191,7 +3195,7 @@ EndIf
 	glDepthMask(GL_true)
 	gldisable gl_blend	
 End Sub
-Dim Shared As Single windv=1,windo3,windprop,shipv,shipdo1,shipo10,shipoo1,shipdoo1
+Dim Shared As Single windv=1,windo3,windprop,shipv,shipdo1,shipo10,shipoo1,shipdoo1,windco1=1,windsi1
 Dim Shared As uint shiptext,shiplist,shipshadowtext,shipshadowtext2,shipbarretext,shipbarrelist
 Dim Shared As uint canoetext,canoelist,canoeshadowtext,canoeshadowtext2
 Dim Shared As Integer tup
@@ -3248,6 +3252,7 @@ If tcanoe=0 Then
  	tup=0
  EndIf
  Var mycolor=(winpixr+winpixg+winpixb)*0.33+10
+ If mx<x100 Then mycolor=255
  'If avgcolor<mycolor Then
  	avgcolor+=(mycolor-avgcolor)*min(0.9,0.05*kfps)
  'Else 
@@ -3268,8 +3273,9 @@ If tcanoe=0 Then
  EndIf
  Exit Sub  
 EndIf
-canoex=mx:canoey=my:canoez=max(18.5,collidez+3)
-If mx<1200 Then
+canoex=mx:canoey=my:canoez=max(18.5+4,collidez+3)
+canoez=min(canoez,collidez2+18.5)
+If mx<1200+x100-100 Then
 	canoez+=-7-1-sin2*3
 EndIf
 If mx<x100 Then
@@ -3433,10 +3439,11 @@ Dim Shared As Single nshipy,nshipz,nshipo1,nshipo2,nshipo3,avgcanoez
 Dim Shared As Single nnshipx,nnshipy,nnshipz,nnshipo1,nnshipo2,nnshipo3
 Sub drawnship()
 Dim As Integer i
-avgcanoez+=(canoez-avgcanoez)*kfps*0.003
-nshipx=1600:nshipz=canoez-avgcanoez+4.55
-If mx<nshipx-400 Then nshipz=canoez
-If mx>nshipx+600 Then nshipz=canoez
+avgcanoez+=(canoez-avgcanoez)*kfps*0.03'0.003
+nshipx=1600:nshipz=canoez-avgcanoez'+4.55
+If mx>x100 Then nshipz+=min(20.0,collidez2+6)
+If mx<nshipx-400 Then nshipz=canoez+6
+'If mx>nshipx+600 Then nshipz=canoez
 Var dist=4000
 While nshipy>my+dist:nshipy-=dist*1.999:nnshipy=nshipy:Wend
 While nshipy<my-dist:nshipy+=dist*1.999:nnshipy=nshipy:Wend
@@ -4174,12 +4181,15 @@ If collidez-collidez0<-1 And mx>x100 Then
 	mx+=7*cos1
 	my+=7*sin1
 EndIf
-/'winy = 2
+winy = 2
 glReadPixels( winx,winy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, @winZ )
 gluUnProject(winX,winY,winz,@modelview(0),@projection(0),@viewport(0),@posX,@posY,@posZ)   
 collidex2=posx
 collidey2=posy
-collidez2=posz
+collidez2=0
+If max(Abs(collidex2-mx),Abs(collidey2-my))<90.0 Then
+	collidez2=posz
+EndIf
 'collidez=min(collidez,collidez2)
 '/
 End Sub
@@ -4259,7 +4269,8 @@ glcolor4f(1,1,1,1)
 For i=1 To ncloud2
 	test=0
 	'cloudx(i)=mx+1000*i:cloudy(i)=my
-	cloudx(i)+=kfps*3
+	cloudx(i)+=kfps*3*windv*windco1
+	cloudy(i)+=kfps*3*windv*windsi1
 	If cloudx(i)<mx-distcloud Then cloudx(i)+=1.999*distcloud:test=1
 	If cloudx(i)>mx+distcloud Then cloudx(i)-=1.999*distcloud:test=1
 	If cloudy(i)<my-distcloud Then cloudy(i)+=1.999*distcloud:test=1
@@ -4296,7 +4307,7 @@ Sub drawcloudshadow(ByVal i As Integer)
 			If max(Abs(xx-mx),Abs(yy-my))<cloudr(i)*0.5 Then
 				train+=1
 			EndIf
-	      Var cc=0.4
+	      Var cc=0.55'0.6'0.4
 	      'cc=1
       	'cc*=min(1.0,max(0.001,0.25*9000/(1000+Abs(xx-mx)+Abs(yy-my))))
       	'cc*=min(1.0,max(0.001,(mz-zz)*Abs(x2)*0.002*0.002))
@@ -4494,7 +4505,10 @@ Sub drawwind'boussole
  	windo1+=(Rnd-0.5)*2
  	If windo1>180 Then windo1-=360
  	If windo1<-180 Then windo1+=360
+ 	windco1=Cos(windo1*degtorad)
+ 	windsi1=Sin(windo1*degtorad)
  EndIf
+ If tcanoe<>2 Then Exit Sub 
  glenable gl_alpha_test
  glAlphaFunc(gl_less,10/254)
  glcolor3f(1,1,1)
