@@ -4306,13 +4306,14 @@ Sub drawcloudshadow(ByVal i As Integer)
 	      'if i=1 And auxtest>0.4 Then xx=mx:yy=my
 	      zz=3
 	      'If zz>mz-10 And mz<mzsol00+100 Then Exit Sub 
-      Var size=cloudr(i)*2.5
+	   Var ksize=min(2.0,(1+suntan2)*1.5/2.5)   
+      Var size=cloudr(i)*2.5*ksize
 		rotavion(xx-mx,yy-my,zz-mz)
 		if x2>(0.9*max(Abs(y2),Abs(z2))-size-4000) Then
 			If max(Abs(xx-mx),Abs(yy-my))<cloudr(i)*0.5 Then
 				train+=1
 			EndIf
-	      Var cc=0.55'0.6'0.4
+	      Var cc=0.4'0.55'0.6'0.4
 	      'cc=1
       	'cc*=min(1.0,max(0.001,0.25*9000/(1000+Abs(xx-mx)+Abs(yy-my))))
       	'cc*=min(1.0,max(0.001,(mz-zz)*Abs(x2)*0.002*0.002))
@@ -4328,7 +4329,7 @@ Sub drawcloudshadow(ByVal i As Integer)
 	      glrotatef(-90,0,1,0)
 	      'glrotatef(cloudshadowdo2(i)-90,0,1,0)
 	      'glrotatef(cloudshadowdo3(i),1,0,0)
-	      gltexcarre3(cloudr(i)*1.5,cloudr(i))
+	      gltexcarre3(cloudr(i)*1.5*ksize,cloudr(i)*ksize)
 	      'gltexsphere(200)
 	      glpopmatrix
 	   EndIf    
