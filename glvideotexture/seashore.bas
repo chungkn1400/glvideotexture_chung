@@ -4206,7 +4206,7 @@ Sub drawcabaneshadowtext()
   glcopyTexSubImage2D(GL_TEXTURE_2D, 0, 0,0, 0,0,512,512)   
 End Sub
 Dim Shared As uint cloudtext  
-Dim Shared As Single cloudx(ncloud),cloudy(ncloud),cloudz(ncloud),cloudr(ncloud)
+Dim Shared As Single cloudx(ncloud),cloudy(ncloud),cloudz(ncloud),cloudr(ncloud),clouddo1(ncloud)
 Dim Shared As Single distcloud=50000/1.3'1.5
 Sub initcloud
 Dim As Integer i
@@ -4237,7 +4237,8 @@ Sub drawcloud(ByVal i As Integer)
 	      	'	If (rain<90 Or Rnd<0.01*kfps) Then krain=15:rain=0
 	      	'EndIf
 	      'EndIf
-         glrotatef(o1,0,0,1)
+	      clouddo1(i)=diro1(cloudx(i)-mx,cloudy(i)-my)
+         glrotatef(clouddo1(i),0,0,1)
 	      glrotatef(-o2,0,1,0)
 	      gltexcarre3(cloudr(i)*1.5,cloudr(i))
 	      'gltexsphere(800)
@@ -4323,7 +4324,7 @@ Sub drawcloudshadow(ByVal i As Integer)
 	      gltranslatef(xx,yy,zz)'clouddz(i)+zz+max(2.0,(mz-zz)*0.03))	      
 	      'glbindtexture(gl_texture_2d,cloudtext)
          'glrotatef(cloudshadowdo1(i),0,0,1)
-         glrotatef(o1,0,0,1)
+         glrotatef(clouddo1(i),0,0,1)
 	      glrotatef(-90,0,1,0)
 	      'glrotatef(cloudshadowdo2(i)-90,0,1,0)
 	      'glrotatef(cloudshadowdo3(i),1,0,0)
