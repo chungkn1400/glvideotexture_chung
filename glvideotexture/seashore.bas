@@ -2282,7 +2282,7 @@ Else
 EndIf
 glpopmatrix
 mx=mxsave
-If train>=2 And mx>0 Then'590 Then
+If train>=2 Then'And mx>0 Then'590 Then
 	soundrain()
 	drawrain()
 Else
@@ -2730,7 +2730,6 @@ EndIf
  	   glenable gl_alpha_test
  For i= 1 To ntree
       tshowtree(i)=0
-      If Abs(treey(i)-deauvilley)<3000 Then Continue For 
  	   If Abs(treex(i)-mx)>2000 And mx<1000 Then Continue For 
  	   If Abs(treex(i)-mx)>3000 And mx>1000 And mx<2000 Then Continue For 
  	   If Abs(treex(i)-mx)>4000 And mx>2000 Then Continue For 
@@ -2739,6 +2738,7 @@ EndIf
       'While treex(i)>mx+disttree :treex(i)-=disttree*2:changetree=1:Wend 	
       While treey(i)<my-disttree :treey(i)+=disttree*2:changetree=1:Wend 
       While treey(i)>my+disttree :treey(i)-=disttree*2:changetree=1:Wend
+      If Abs(treey(i)-deauvilley)<3000 Then Continue For 
       If Abs(treex(i)-mx)+Abs(treey(i)-my)<300 Then tshowtree(i)=1 	
       If treex(i)<0 Then  
        rotavion2(treex(i)-mx,treey(i)-my)
@@ -2968,7 +2968,8 @@ For i= 1 To nroc
      While rocx(i)>mx+distroc :rocx(i)-=distroc*2:changeroc=1:Wend 	
      While rocy(i)<my-distroc :rocy(i)+=distroc*2:changeroc=1:Wend 
      While rocy(i)>my+distroc :rocy(i)-=distroc*2:changeroc=1:Wend 
-     If rocx(i)>100 Then Continue For 
+     If rocx(i)>100 Then Continue For
+     If Abs(rocy(i)-deauvilley)<6000 Then Continue For  
      rotavion(rocx(i)-mx,rocy(i)-my,rocz(i)-mz)
      If x2>(0.9*max(Abs(y2),Abs(z2))-200*rocscale(i)) Then 	
     	glpushmatrix
@@ -3069,7 +3070,7 @@ glbindtexture(GL_TEXTURE_2D,cabanetext)
      While cabaney>my+distcabane :cabaney-=distcabane*2:changecabane=1:Wend 
      'If cabanex>100 Then Continue For 
      rotavion(cabanex-mx,cabaney-my,cabanez-mz)
-     If x2>(0.9*max(Abs(y2),Abs(z2))-200) And Abs(cabaney-deauvilley)>3000 Then 	
+     If x2>(0.9*max(Abs(y2),Abs(z2))-200) And Abs(cabaney-deauvilley)>6000 Then 	
     	glpushmatrix
   		gltranslatef(cabanex,cabaney,cabanez)
     	glrotatef(cabaneo1+90,0,0,1)
