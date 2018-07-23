@@ -2091,6 +2091,7 @@ Declare Sub drawgrass()
 Declare Sub drawraindrops()
 Declare Sub drawwind()
 Declare Sub drawrain()
+Declare Sub drawdeauville()
 Dim Shared As Double tdrawraindrops,dtraindrop=2
 Sub drawshadows()
 gldisable gl_depth_test 
@@ -2318,6 +2319,7 @@ EndIf
 	drawkate()
 	drawseagull()
 	drawcabane()
+	drawdeauville()
 	drawfire()
 	drawsmokes()
    glnormal3f(0,0,1)
@@ -2679,7 +2681,7 @@ Const As Integer ntree0=180+120+580
 Const As Integer ntree=ntree0+ntree0
 Dim Shared As uint treetext,treetext2,shadowtreetext,shadowtreetext2
 Dim Shared As Integer treetype(ntree),tshowtree(ntree) 
-Dim Shared As Single o1tree,treex(ntree),treey(ntree),treez(ntree)
+Dim Shared As Single o1tree,treex(ntree),treey(ntree),treez(ntree),deauvilley
 Dim Shared As Double timetree
 Sub drawtrees()	
 Dim As Integer i,j
@@ -2728,6 +2730,7 @@ EndIf
  	   glenable gl_alpha_test
  For i= 1 To ntree
       tshowtree(i)=0
+      If Abs(treey(i)-deauvilley)<3000 Then Continue For 
  	   If Abs(treex(i)-mx)>2000 And mx<1000 Then Continue For 
  	   If Abs(treex(i)-mx)>3000 And mx>1000 And mx<2000 Then Continue For 
  	   If Abs(treex(i)-mx)>4000 And mx>2000 Then Continue For 
@@ -3008,6 +3011,33 @@ Dim As Integer i,j,k
  glenable gl_depth_test
  gldisable gl_alpha_test
 End Sub
+Dim Shared As uint deauvilletext,deauvillelist
+Dim Shared As Single deauvillex,deauvillez,deauvilleo1
+Sub drawdeauville()
+Dim As Integer i 
+If deauvilletext=0 Then
+	deauvilletext=guiloadtexture(ExePath+"/objects/deauville.jpg")
+   deauvillelist=loadlist(ExePath+"/objects/deauville.obj",3000)
+	deauvillex=-900
+	deauvilley=-4000
+	deauvillez=0
+	deauvilleo1=180+47
+EndIf
+glcolor3f(1,1,1)
+glbindtexture(GL_TEXTURE_2D,deauvilletext)
+'gldisable gl_lighting
+     rotavion(deauvillex-mx,deauvilley-my,deauvillez-mz)
+     If x2>(0.9*max(Abs(y2),Abs(z2))-10000) Then 	
+    	glpushmatrix
+  		gltranslatef(deauvillex,deauvilley,deauvillez)
+    	glrotatef(deauvilleo1,0,0,1)
+    	Var sc=2
+    	glscalef(sc,sc,1)
+    	glcalllist deauvillelist
+    	glpopmatrix
+     EndIf
+If tdark=1 then glenable gl_lighting
+End Sub
 Dim Shared As uint cabanetext,cabanelist,chairtext,chairlist
 Dim Shared As Single cabanex,cabaney,cabanez,cabaneo1
 Sub drawcabane()
@@ -3039,7 +3069,7 @@ glbindtexture(GL_TEXTURE_2D,cabanetext)
      While cabaney>my+distcabane :cabaney-=distcabane*2:changecabane=1:Wend 
      'If cabanex>100 Then Continue For 
      rotavion(cabanex-mx,cabaney-my,cabanez-mz)
-     If x2>(0.9*max(Abs(y2),Abs(z2))-200) Then 	
+     If x2>(0.9*max(Abs(y2),Abs(z2))-200) And Abs(cabaney-deauvilley)>3000 Then 	
     	glpushmatrix
   		gltranslatef(cabanex,cabaney,cabanez)
     	glrotatef(cabaneo1+90,0,0,1)
