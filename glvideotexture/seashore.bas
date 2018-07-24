@@ -2171,7 +2171,7 @@ Sub rotavion2(ByVal x As Single,ByVal y As Single)
  y2=-x*sin1+y*cos1
  'z2=-x1*sin2+z*cos2
 End Sub
-Dim Shared As Single prop,vprop,nshipx
+Dim Shared As Single prop,vprop,nshipx,deauvilley
 Sub display()
 Dim As Integer i,j,k 
 
@@ -2181,7 +2181,8 @@ Dim As Integer i,j,k
 	glloadidentity
 		 
    yh=28'50'28
-   mx=max(-2400.0-2000,min(3000.0,mx))
+   Var dx=max(0.0,min(2000.0,4000-Abs(my-deauvilley)))
+   mx=max(-2400.0-2000-dx,min(3000.0,mx))
    mz=max(-15.0,min(200.0,mz))
    If mz>4 Then
    	o22=0:o33=0:z22=0
@@ -2681,7 +2682,7 @@ Const As Integer ntree0=180+120+580
 Const As Integer ntree=ntree0+ntree0
 Dim Shared As uint treetext,treetext2,shadowtreetext,shadowtreetext2
 Dim Shared As Integer treetype(ntree),tshowtree(ntree) 
-Dim Shared As Single o1tree,treex(ntree),treey(ntree),treez(ntree),deauvilley
+Dim Shared As Single o1tree,treex(ntree),treey(ntree),treez(ntree)
 Dim Shared As Double timetree
 Sub drawtrees()	
 Dim As Integer i,j
@@ -2969,7 +2970,7 @@ For i= 1 To nroc
      While rocy(i)<my-distroc :rocy(i)+=distroc*2:changeroc=1:Wend 
      While rocy(i)>my+distroc :rocy(i)-=distroc*2:changeroc=1:Wend 
      If rocx(i)>100 Then Continue For
-     If Abs(rocy(i)-deauvilley)<6000 Then Continue For  
+     If Abs(rocy(i)-deauvilley)<4000 Then Continue For  
      rotavion(rocx(i)-mx,rocy(i)-my,rocz(i)-mz)
      If x2>(0.9*max(Abs(y2),Abs(z2))-200*rocscale(i)) Then 	
     	glpushmatrix
@@ -2998,7 +2999,7 @@ Dim As Integer i,j,k
  glbindtexture(GL_TEXTURE_2D,shadowroctext)
  For i=1 To nroc
  	     If rocx(i)>0 Then Continue For 
-        If Abs(rocy(i)-deauvilley)<6000 Then Continue For  
+        If Abs(rocy(i)-deauvilley)<4000 Then Continue For  
         glpushmatrix
    	  gltranslatef(rocx(i),rocy(i),0.5)
    	  glrotatef(suno1,0,0,1)
@@ -3020,6 +3021,7 @@ Dim As Integer i
 If deauvilletext=0 Then
 	deauvilletext=guiloadtexture(ExePath+"/objects/deauville.jpg")
    deauvillelist=loadlist(ExePath+"/objects/deauville.obj",3000)
+   'deauvillelist=loadlist(ExePath+"/objects/empire.obj",3000)
 	deauvillex=-900
 	deauvilley=-4000
 	deauvillez=0
@@ -3033,13 +3035,14 @@ glbindtexture(GL_TEXTURE_2D,deauvilletext)
     	glpushmatrix
   		gltranslatef(deauvillex,deauvilley,deauvillez)
     	glrotatef(deauvilleo1,0,0,1)
-    	Var sc=2
+    	Var sc=1.5'2
     	glscalef(sc,sc,1)
     	glcalllist deauvillelist
     	glpopmatrix
      EndIf
 If tdark=1 then glenable gl_lighting
 End Sub
+Dim Shared As Integer tdrawcabane
 Dim Shared As uint cabanetext,cabanelist,chairtext,chairlist
 Dim Shared As Single cabanex,cabaney,cabanez,cabaneo1
 Sub drawcabane()
@@ -3060,6 +3063,7 @@ If Abs(cabanex-mx)<60 Then
 		z23=7
 	EndIf
 EndIf
+tdrawcabane=0
 Var distcabane=2000
 glcolor3f(1,1,1)
 glbindtexture(GL_TEXTURE_2D,cabanetext)
@@ -3071,7 +3075,8 @@ glbindtexture(GL_TEXTURE_2D,cabanetext)
      While cabaney>my+distcabane :cabaney-=distcabane*2:changecabane=1:Wend 
      'If cabanex>100 Then Continue For 
      rotavion(cabanex-mx,cabaney-my,cabanez-mz)
-     If x2>(0.9*max(Abs(y2),Abs(z2))-200) And Abs(cabaney-deauvilley)>6000 Then 	
+     If x2>(0.9*max(Abs(y2),Abs(z2))-200) And Abs(cabaney-deauvilley)>3500 Then 	
+    	tdrawcabane=1
     	glpushmatrix
   		gltranslatef(cabanex,cabaney,cabanez)
     	glrotatef(cabaneo1+90,0,0,1)
@@ -3929,7 +3934,8 @@ Sub drawcabaneshadow()
 If cabaneshadowtext=0 Then
 	 cabaneshadowtext=guiloadtexture(ExePath+"/objects/cabaneshadow.jpg",200,255)	
 EndIf
-If tdark=1 Then Exit Sub  
+If tdark=1 Then Exit Sub
+If tdrawcabane=0 Then Exit Sub   
 rotavion(cabanex-mx,cabaney-my,cabanez-mz)
 If x2>0.9*max(Abs(y2),Abs(z2))-400 Then
 	Var x0=cabanex+90
