@@ -2092,6 +2092,7 @@ Declare Sub drawraindrops()
 Declare Sub drawwind()
 Declare Sub drawrain()
 Declare Sub drawdeauville()
+Declare Sub drawstars()
 Dim Shared As Double tdrawraindrops,dtraindrop=2
 Sub drawshadows()
 gldisable gl_depth_test 
@@ -2215,6 +2216,8 @@ cos1=tcos1:sin1=tsin1:o1=o1+heado1
    drawskydome(6000,14,14)
    glpopmatrix 	
    drawsunset()
+   
+   drawstars()
    
    drawclouds()
 
@@ -2579,6 +2582,42 @@ If (heure<7.5 Or heure>17.5)And mx<20 Then
    glpopmatrix
 EndIf
 glcolormask(1,1,1,1)
+glEnable GL_DEPTH_TEST
+gldisable GL_BLEND
+If tdark=1 Then glenable GL_LIGHTING
+End Sub
+Dim Shared As uint startext
+Sub drawstars
+If startext=0 Then startext=guiloadtexture(ExePath+"/media/stardome.jpg")
+'If tdark=0 Then Exit Sub  
+If heure>8 And heure<18 Then Exit Sub 
+gldisable GL_LIGHTING
+gldisable GL_DEPTH_TEST
+glEnable GL_TEXTURE_2D
+glbindtexture(gl_texture_2d,startext)
+Var cc=0.42
+glcolor3f(cc,cc,cc)
+glEnable GL_BLEND
+glBlendFunc GL_one_minus_dst_color,GL_ONE'_MINUS_SRC_color
+glpushmatrix
+gltranslatef( mx,my,mz)
+glrotatef(-heure*360/24,0,0,1)
+'glrotatef(-20*(1-Abs(heure-12)/12),0,1,0)
+gltranslatef( 10000,0,0)
+gltexcarre3(20000,20000)
+gltranslatef( -10000,10000,0)
+glrotatef(90,0,0,1)
+gltexcarre3(20000,20000)
+gltranslatef( -10000,10000,0)
+glrotatef(90,0,0,1)
+gltexcarre3(20000,20000)
+gltranslatef( -10000,10000,0)
+glrotatef(90,0,0,1)
+gltexcarre3(20000,20000)
+gltranslatef( -10000,0,10000)
+glrotatef(90,0,1,0)
+gltexcarre3(20000,20000)
+glpopmatrix
 glEnable GL_DEPTH_TEST
 gldisable GL_BLEND
 If tdark=1 Then glenable GL_LIGHTING
@@ -3022,7 +3061,7 @@ If deauvilletext=0 Then
 	deauvilletext=guiloadtexture(ExePath+"/objects/deauville.jpg")
    deauvillelist=loadlist(ExePath+"/objects/deauville.obj",3000)
    'deauvillelist=loadlist(ExePath+"/objects/empire.obj",3000)
-	deauvillex=-900
+	deauvillex=-700
 	deauvilley=-4000
 	deauvillez=0
 	deauvilleo1=180+47
