@@ -2998,6 +2998,7 @@ Dim As Integer i,j,k
  glbindtexture(GL_TEXTURE_2D,shadowroctext)
  For i=1 To nroc
  	     If rocx(i)>0 Then Continue For 
+        If Abs(rocy(i)-deauvilley)<6000 Then Continue For  
         glpushmatrix
    	  gltranslatef(rocx(i),rocy(i),0.5)
    	  glrotatef(suno1,0,0,1)
