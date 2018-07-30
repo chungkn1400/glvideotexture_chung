@@ -1080,24 +1080,26 @@ Sub drawsand
 setxmaree()	
 If sandtext=0 Then sandtext=guiloadtexture(ExePath+"/media/sand.jpg")
 glbindtexture gl_texture_2D,sandtext
-Dim As single dx=-3000,dxx=-2000,dtx=3.5,dty=5,tx=0,ty=0
+Dim As single dx=-3000,dxx=-2000,dtx=3.5,dty=5*2.1,tx=0,ty=0,dy=dx*2.1
    Var ddx=2*dx/dtx,ddy=2*0.7*dx/dty
    Var cc=0.65
    glpushmatrix 
    gltranslatef(min(0.0,Int(mx/ddx)*ddx),Int(my/ddy)*ddy,0)
+   Var dmx=Int(mx/(ddx))*ddx
+   dxx+=dmx
 	glbegin(gl_quads)
 	glTexCoord2f(tx,ty)
 	glcolor3f(1,1,1)
-	glvertex3f(-dxx,-dx,0)
+	glvertex3f(-dxx,-dy,0)
 	gltexcoord2f(tx+dtx,ty)
    glcolor3f(cc,cc,cc)
-	glvertex3f(dx,-dx,0)
+	glvertex3f(dx,-dy,0)
 	glTexCoord2f(tx+dtx,ty+dty)
    glcolor3f(cc,cc,cc)
-	glvertex3f(dx,dx,0)
+	glvertex3f(dx,dy,0)
 	gltexcoord2f(tx,ty+dty)
 	glcolor3f(1,1,1)
-	glvertex3f(-dxx,dx,0)
+	glvertex3f(-dxx,dy,0)
 	glend()
 	Var c1=0.6
 	'cc=0.75
@@ -1107,16 +1109,16 @@ Dim As single dx=-3000,dxx=-2000,dtx=3.5,dty=5,tx=0,ty=0
 	glbegin(gl_quads)
 	glTexCoord2f(tx,ty)
 	glcolor3f(c1,c1,c1)
-	glvertex3f(-dxx,-dx,0)
+	glvertex3f(-dxx,-dy,0)
 	gltexcoord2f(tx+dtx,ty)
    glcolor3f(cc,cc,cc)
-	glvertex3f(dx,-dx,0)
+	glvertex3f(dx,-dy,0)
 	glTexCoord2f(tx+dtx,ty+dty)
    glcolor3f(cc,cc,cc)
-	glvertex3f(dx,dx,0)
+	glvertex3f(dx,dy,0)
 	gltexcoord2f(tx,ty+dty)
 	glcolor3f(c1,c1,c1)
-	glvertex3f(-dxx,dx,0)
+	glvertex3f(-dxx,dy,0)
 	glend()
 	glpopmatrix
 	glcolor3f(1,1,1)
@@ -3062,7 +3064,7 @@ If deauvilletext=0 Then
    deauvillelist=loadlist(ExePath+"/objects/deauville.obj",3000)
    'deauvillelist=loadlist(ExePath+"/objects/empire.obj",3000)
 	deauvillex=-700
-	deauvilley=-4000
+	deauvilley=-4700
 	deauvillez=0
 	deauvilleo1=180+47
 EndIf
@@ -3273,6 +3275,7 @@ EndIf
 End Sub
 Dim Shared As Single windv=1,windo3,windprop,shipv,shipdo1,shipo10,shipoo1,shipdoo1,windco1=1,windsi1
 Dim Shared As uint shiptext,shiplist,shipshadowtext,shipshadowtext2,shipbarretext,shipbarrelist
+Dim Shared As uint shiplistnovoile,shiplistvoile
 Dim Shared As uint canoetext,canoelist,canoeshadowtext,canoeshadowtext2
 Dim Shared As Integer tup
 Dim Shared As Double timeup
@@ -3299,14 +3302,17 @@ glbindtexture(GL_TEXTURE_2D,canoetext)
       glpopmatrix
      EndIf  
 End Sub
-Dim Shared As Single shipddo1
+Dim Shared As Single shipddo1,shipvoileo1,shipscaleo1=1
 Sub drawcanoe()
 Dim As Integer i
 If canoetext=0 Then
 	canoetext=guiloadtexture(ExePath+"/objects/canoe_low.jpg")
    canoelist=loadlist(ExePath+"/objects/canoe_low.3ds",40)
 	shiptext=guiloadtexture(ExePath+"/objects/sailship.jpg",10,255)
-   shiplist=loadlist(ExePath+"/objects/sailship.obj",60)
+   'shiplist=loadlist(ExePath+"/objects/sailship.obj",60)
+   shiplist=loadlist(ExePath+"/objects/sailship_noquille.3ds",60)
+   shiplistnovoile=loadlist(ExePath+"/objects/sailship_novoile.3ds",60)
+   shiplistvoile=loadlist(ExePath+"/objects/sailship_voile.3ds",60)
 	shipbarretext=guiloadtexture(ExePath+"/objects/sailship0.jpg")
    shipbarrelist=loadlist(ExePath+"/objects/sailship_barre.3ds",3)
 EndIf
@@ -3482,9 +3488,22 @@ EndIf
     		Else 
     			gltranslatef(19.25,0.5,3.5)
     		EndIf
+    		Var do10=shipscaleo1
+    		shipscaleo1=do1
+    		If do10*shipscaleo1<-0.00001 Then shipvoileo1=-shipvoileo1
     		If do1>0 Then glscalef(1,-1,1)
-    		glcalllist shiplist
+    		glcalllist shiplistnovoile
          gldisable gl_alpha_test
+         glpushmatrix
+         gltranslatef(4,0,0)
+         Var ddo1=windo1-shipo1
+         While ddo1>180:ddo1-=360:Wend
+         While ddo1<-180:ddo1+=360:Wend
+         ddo1=max(6.0,110-Abs(ddo1))
+         shipvoileo1+=(ddo1-shipvoileo1)*min(1.0,0.15*kfps)         
+         glrotatef(shipvoileo1*0.27,0,0,1)
+         glcalllist shiplistvoile
+         glpopmatrix
 	      glbindtexture(GL_TEXTURE_2D,shipbarretext)
     		If do1>0 Then
     			gltranslatef(-14.55,0.24,4.7)
