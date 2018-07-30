@@ -3425,7 +3425,7 @@ EndIf
     		glcalllist canoelist
     	EndIf
     	If tcanoe=2 Then
-    		mx=max(mx,200.0)
+    		mx=max(mx,x100+100.0)
     		While canoeo1>180:canoeo1-=360:shipo1=canoeo1:Wend
     		While canoeo1<-180:canoeo1+=360:shipo1=canoeo1:Wend 
     		shipdo1+=(o1-shipo10-shipdo1*1.01)*kfps*0.1
