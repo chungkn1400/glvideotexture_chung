@@ -3428,14 +3428,20 @@ EndIf
     		mx=max(mx,x100+100.0)
     		While canoeo1>180:canoeo1-=360:shipo1=canoeo1:Wend
     		While canoeo1<-180:canoeo1+=360:shipo1=canoeo1:Wend 
-    		shipdo1+=(o1-shipo10-shipdo1*1.01)*kfps*0.1
+    		Var dddo1=(o1-shipo10-shipdo1*1.01)
+    		While dddo1>180:dddo1-=360:Wend
+    		While dddo1<-180:dddo1+=360:Wend 
+    		shipdo1+=dddo1*kfps*0.1
     		shipo10=o1
     		shipdo1=max(-3.0,min(3.0,shipdo1))
     		o1+=shipdo1*kfps*0.6
     		canoeo2=max(-45.0,min(45.0,canoeo2))
     		canoeo3=max(-45.0,min(45.0,canoeo3))
     		Var k01=0.11
-    		shipo1+=(canoeo1-shipo1)*kfps*k01
+    		dddo1=canoeo1-shipo1
+    		While dddo1>180:dddo1-=360:Wend
+    		While dddo1<-180:dddo1+=360:Wend 
+    		shipo1+=(dddo1)*kfps*k01
     		shipo2+=(canoeo2*0.85-shipo2)*kfps*k01
     		shipo3+=(canoeo3*0.85-shipo3)*kfps*k01
     		shipx+=(canoex-shipx)*min(0.9,kfps*0.31)
@@ -3460,7 +3466,7 @@ EndIf
   		   EndIf
   		   Var co1=Cos(degtorad*(windo1-shipo1))
   		   Var si1=Sin(degtorad*(windo1-shipo1))
-  		   Var kvoile=0.8
+  		   Var kvoile=0.8,treversewind=0
   		   If co1>0 Then
   		   	windprop=(windvv-shipv*(co1+0.115))*kvoile
   		   ElseIf co1>-0.94 Then 
@@ -3468,6 +3474,7 @@ EndIf
   		   	windprop=(windvv*(1+1.0*co1)+shipv*(co1-0.115))*kvoile
   		   Else 
   		   	windprop=(windvv*(1+1.19*co1)+shipv*(co1-0.115))*kvoile
+  		   	treversewind=1
   		   EndIf
   		   Var kmass=0.02
   		   shipv+=(windprop*kmass-0.001*shipv)*kfps'*kmass
@@ -3501,6 +3508,9 @@ EndIf
          While ddo1<-180:ddo1+=360:Wend
          ddo1=max(6.0,110-Abs(ddo1))
          shipvoileo1+=(ddo1-shipvoileo1)*min(1.0,0.15*kfps)         
+         If shipv<0 And Rnd<0.08*kfps Then
+         	shipvoileo1+=(Rnd-0.5)*20
+         EndIf
          glrotatef(shipvoileo1*0.27,0,0,1)
          glcalllist shiplistvoile
          glpopmatrix
