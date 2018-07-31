@@ -395,7 +395,7 @@ sub soundnemo
 			t210=210
 		Else 			
 			mcisendstring("play beethoven from 0",0,0,0)
-			t210=324
+			t210=298'324
 		EndIf
 		tsoundnemo0=Timer 
 		tsoundnemo=Timer+Rnd*180
@@ -908,7 +908,7 @@ Sub initgl
 	'gluPerspective   48.0,    640.0/480.0,  2.0, 13000.0
 	'gldistmax=13000*10
 	'gluPerspective   48.0,    xmax/ymax,  2.0, gldistmax*25
-	gluPerspective   48.0,    xmax/ymax,  2.0, 100000'1700000
+	gluPerspective   48.0,    xmax/ymax,  1.0, 60000'1700000
 	'gluPerspective   89.0,    xmax/ymax,  3.3, 100000'1700000
 	glMatrixMode GL_MODELVIEW
 	glLoadIdentity
@@ -3550,8 +3550,8 @@ If mx>x100 Then nshipz+=min(20.0,collidez2+6)
 If mx<nshipx-400 Then nshipz=canoez+6
 'If mx>nshipx+600 Then nshipz=canoez
 Var dist=4000
-While nshipy>my+dist:nshipy-=dist*1.999:nnshipy=nshipy:Wend
-While nshipy<my-dist:nshipy+=dist*1.999:nnshipy=nshipy:Wend
+While nshipy>my+dist:nshipy-=dist*1.999:nnshipy=nshipy:nnshipx=nshipx:Wend
+While nshipy<my-dist:nshipy+=dist*1.999:nnshipy=nshipy:nnshipx=nshipx:Wend
 nshipo3=Sin(time1*2.7)*4
 nshipo2=canoeo2
 nshipo1=-90
