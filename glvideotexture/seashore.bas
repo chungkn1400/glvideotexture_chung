@@ -3506,11 +3506,12 @@ EndIf
          Var ddo1=windo1-shipo1
          While ddo1>180:ddo1-=360:Wend
          While ddo1<-180:ddo1+=360:Wend
-         ddo1=max(6.0,110-Abs(ddo1))
+         ddo1=max(2.0,115-Abs(ddo1))
          shipvoileo1+=(ddo1-shipvoileo1)*min(1.0,0.15*kfps)         
-         If shipv<0 And Rnd<0.08*kfps Then
+         If shipv<0 And Rnd<0.09*kfps Then
          	shipvoileo1+=(Rnd-0.5)*20
          EndIf
+         If shipv>=0 Then shipvoileo1=max(15.0,shipvoileo1)
          glrotatef(shipvoileo1*0.27,0,0,1)
          glcalllist shiplistvoile
          glpopmatrix
