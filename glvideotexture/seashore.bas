@@ -2458,14 +2458,14 @@ Dim Shared As uint sunsettext,sunbacktext
 Sub drawsunset
 If sunsettext=0 Then sunsettext=guiloadtexture(ExePath+"/media/sun.jpg")
 If sunbacktext=0 Then sunbacktext=guiloadtexture(ExePath+"/media/sunback.jpg",1,255)
-Dim As Single aux
-aux=ksoleil'0.5
+'Dim As Single aux
+'aux=ksoleil'0.5
 'glClearColor 0.5*aux, 0.5*aux, 1.0*aux, 0.0
 glEnable GL_BLEND
 glBlendFunc GL_SRC_color,GL_ONE'_MINUS_SRC_color
 glpushmatrix
 'gltranslatef( mx+40000,my,mz-5000)
-Var k5=2.5
+Var k5=1.5'2.5
 gltranslatef( mx-kxsoleil*k5,my-kysoleil*k5,mz+kzsoleil*k5)'5
 glrotatef(-heure*170/24,0,0,1)
 glrotatef(-50*(1-Abs(heure-12)/12),0,1,0)
@@ -2476,7 +2476,7 @@ gldisable GL_DEPTH_TEST
 glEnable GL_TEXTURE_2D
 'glLogicOp GL_OR
 glbindtexture(gl_texture_2d,sunsettext)
-aux=210/256'184/256'170/256
+Var aux=210/256'184/256'170/256
 glcolor3f(aux,aux,aux*0.6)
 'glcolor3f( aux,aux*ksoleil,aux*ksoleil)
 gltexcarre3(20000*k5,18000*k5)
@@ -2510,8 +2510,8 @@ gldisable GL_BLEND
 If tdark=1 Then glenable GL_LIGHTING
 End Sub
 Sub drawsunsetwater
-Dim As Single aux
-aux=ksoleil'0.5
+'Dim As Single aux
+'aux=ksoleil'0.5
 'glClearColor 0.5*aux, 0.5*aux, 1.0*aux, 0.0
 glEnable GL_BLEND
 glBlendFunc GL_one_minus_dst_alpha,GL_ONE'_MINUS_SRC_color
@@ -2519,7 +2519,7 @@ glcolormask(1,1,1,0)
 glpushmatrix
 glscalef(1,1,-1)
 'gltranslatef( mx+40000,my,mz-5000)
-Var k5=2.5
+Var k5=1.5'2.5
 gltranslatef( mx-kxsoleil*k5,my-kysoleil*k5,mz+kzsoleil*k5)'5
 glrotatef(-heure*170/24,0,0,1)
 glrotatef(-50*(1-Abs(heure-12)/12),0,1,0)
@@ -2530,7 +2530,7 @@ gldisable GL_DEPTH_TEST
 glEnable GL_TEXTURE_2D
 'glLogicOp GL_OR
 glbindtexture(gl_texture_2d,sunsettext)
-aux=210/256'184/256'170/256
+Var aux=210/256'184/256'170/256
 glcolor3f(aux,aux,aux*0.6)
 'glcolor3f( aux,aux*ksoleil,aux*ksoleil)
 gltexcarre3(20000*k5,18000*k5)
