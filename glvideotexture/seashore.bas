@@ -374,11 +374,17 @@ End Sub
 Sub soundseagull
 		mcisendstring("play seagull from 0",0,0,0)
 End Sub
-Dim Shared As Integer tsoundwind=0
+Dim Shared As Integer tsoundwind=0,timesoundwind
+Sub setsoundwindvol(kvol As Single=1)
+	Var k160=400.0
+	mcisendstring("setaudio wind volume to "+Str(Int(min(999.0,max(2.0,k160*kvol)))),0,0,0)	
+End Sub
 Sub soundwind
-	If tsoundwind=0 Then
+	If tsoundwind=0 Or Timer>timesoundwind+13 Then
 		tsoundwind=1
-		mcisendstring("play wind from 100 repeat",0,0,0)
+		timesoundwind=Timer 
+		setsoundwindvol(1)
+		mcisendstring("play wind from 50 repeat",0,0,0)
 	EndIf
 End Sub
 Sub stopsoundwind
@@ -754,6 +760,13 @@ While quit=0 And guitestkey(vk_escape)=0
 		mcisendstring("setaudio ocean volume to "+Str(Int(vol)),0,0,0)
 		vol=max(5.0,min(1000.0,230*110/max(100.0,1100+mx)))
 		mcisendstring("setaudio nature volume to "+Str(Int(vol)),0,0,0)
+		If mx<-700 Then
+			setsoundwindvol(0.3)
+		ElseIf mx<-300 Then
+			setsoundwindvol(0.5)
+		ElseIf mx<100 Then 
+			setsoundwindvol(1)
+		EndIf
 	EndIf
 
    If tactive=1 Then
@@ -2295,7 +2308,7 @@ Else
 	stopsoundrain()
 EndIf
 train=0
-If mx>1200 Then
+If mx>-1000 Then
 	soundwind()
 Else
 	stopsoundwind()
@@ -3273,7 +3286,7 @@ EndIf
 	glDepthMask(GL_true)
 	gldisable gl_blend	
 End Sub
-Dim Shared As Single windv=1,windo3,windprop,shipv,shipdo1,shipo10,shipoo1,shipdoo1,windco1=1,windsi1
+Dim Shared As Single windv=1,windo3,windprop,shipv,shipdo1,shipo10,shipoo1,shipdoo1,windco1=1,windsi1,kwindv=1,kwindvv=1
 Dim Shared As uint shiptext,shiplist,shipshadowtext,shipshadowtext2,shipbarretext,shipbarrelist
 Dim Shared As uint shiplistnovoile,shiplistvoile
 Dim Shared As uint canoetext,canoelist,canoeshadowtext,canoeshadowtext2
@@ -3458,7 +3471,12 @@ EndIf
     	   	windo1-=s14
     	   	shipddo1=-100
     	   EndIf
-  		   Var windvv=windv*2
+  		   Var windvv=windv*2*kwindv
+  		   If Rnd<0.01*kfps Then
+  		   	kwindvv=1+(Rnd-0.5)*0.2
+  		   	setsoundwindvol(1+(kwindvv-1)*0.25)
+  		   EndIf
+  		   kwindv+=(kwindvv-kwindv)*0.012*kfps
   		   If do1>0 Then
   		   	windo3=(90-Abs(do1-90))*windvv*0.06
   		   Else
