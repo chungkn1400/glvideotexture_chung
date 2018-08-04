@@ -3286,9 +3286,10 @@ EndIf
 	glDepthMask(GL_true)
 	gldisable gl_blend	
 End Sub
-Dim Shared As Single windv=1,windo3,windprop,shipv,shipdo1,shipo10,shipoo1,shipdoo1,windco1=1,windsi1,kwindv=1,kwindvv=1
+Dim Shared As Single windv=1,windo3,windprop,shipv,shipdo1,shipo10,shipoo1,shipdoo1
+Dim Shared As Single windco1=1,windsi1,kwindv=1,kwindvv=1
 Dim Shared As uint shiptext,shiplist,shipshadowtext,shipshadowtext2,shipbarretext,shipbarrelist
-Dim Shared As uint shiplistnovoile,shiplistvoile
+Dim Shared As uint shiplistnovoile,shiplistvoile,shiplistvoile2
 Dim Shared As uint canoetext,canoelist,canoeshadowtext,canoeshadowtext2
 Dim Shared As Integer tup
 Dim Shared As Double timeup
@@ -3315,7 +3316,7 @@ glbindtexture(GL_TEXTURE_2D,canoetext)
       glpopmatrix
      EndIf  
 End Sub
-Dim Shared As Single shipddo1,shipvoileo1,shipscaleo1=1
+Dim Shared As Single shipddo1,shipvoileo1,shipscaleo1=1,shipvoileo12
 Sub drawcanoe()
 Dim As Integer i
 If canoetext=0 Then
@@ -3324,8 +3325,9 @@ If canoetext=0 Then
 	shiptext=guiloadtexture(ExePath+"/objects/sailship.jpg",10,255)
    'shiplist=loadlist(ExePath+"/objects/sailship.obj",60)
    shiplist=loadlist(ExePath+"/objects/sailship_noquille.3ds",60)
-   shiplistnovoile=loadlist(ExePath+"/objects/sailship_novoile.3ds",60)
+   shiplistnovoile=loadlist(ExePath+"/objects/sailship_novoile2.3ds",60)
    shiplistvoile=loadlist(ExePath+"/objects/sailship_voile.3ds",60)
+   shiplistvoile2=loadlist(ExePath+"/objects/sailship_voile2.3ds",60)
 	shipbarretext=guiloadtexture(ExePath+"/objects/sailship0.jpg")
    shipbarrelist=loadlist(ExePath+"/objects/sailship_barre.3ds",3)
 EndIf
@@ -3515,10 +3517,18 @@ EndIf
     		EndIf
     		Var do10=shipscaleo1
     		shipscaleo1=do1
-    		If do10*shipscaleo1<-0.00001 Then shipvoileo1=-shipvoileo1
+    		If do10*shipscaleo1<-0.00001 Then
+    			shipvoileo1=-shipvoileo1
+    			shipvoileo12=-shipvoileo12
+    		EndIf
     		If do1>0 Then glscalef(1,-1,1)
     		glcalllist shiplistnovoile
          gldisable gl_alpha_test
+         shipvoileo12+=(1-shipvoileo12)*min(1.0,0.15*kfps)
+         glpushmatrix
+         glscalef(1,shipvoileo12*(1+(kwindv-1)*3),1)
+         glcalllist shiplistvoile2
+         glpopmatrix         
          glpushmatrix
          gltranslatef(4,0,0)
          Var ddo1=windo1-shipo1
@@ -3528,8 +3538,12 @@ EndIf
          shipvoileo1+=(ddo1-shipvoileo1)*min(1.0,0.15*kfps)         
          If shipv<0 And Rnd<0.09*kfps Then
          	shipvoileo1+=(Rnd-0.5)*20
+         	shipvoileo12+=(Rnd-0.5)
          EndIf
-         If shipv>=0 Then shipvoileo1=max(15.0,shipvoileo1)
+         If shipv>=0 Then
+         	shipvoileo1=max(15.0,shipvoileo1)
+         	If ddo1<3.0 Then shipvoileo12=max(0.5,shipvoileo12)
+         EndIf
          glrotatef(shipvoileo1*0.27,0,0,1)
          glcalllist shiplistvoile
          glpopmatrix
