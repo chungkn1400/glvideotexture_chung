@@ -2187,7 +2187,7 @@ Sub rotavion2(ByVal x As Single,ByVal y As Single)
  y2=-x*sin1+y*cos1
  'z2=-x1*sin2+z*cos2
 End Sub
-Dim Shared As Single prop,vprop,nshipx,deauvilley
+Dim Shared As Single prop,vprop,nshipx,deauvilley,o1save,cos1save,sin1save
 Sub display()
 Dim As Integer i,j,k 
 
@@ -2203,6 +2203,11 @@ Dim As Integer i,j,k
    If mz>4 Then
    	o22=0:o33=0:z22=0
    EndIf
+   
+   While o1>180:o1-=360:Wend
+   While o1<-180:o1+=360:Wend
+   o2=max(-89.0,min(89.0,o2))
+   o3=max(-179.0,min(179.0,o3))
    
    If testmouse=0 Then cos1=Cos(o1*degtorad):sin1=Sin(o1*degtorad)
    cos2=Cos((o2+o22)*degtorad):sin2=Sin((o2+o22)*degtorad)
@@ -2223,7 +2228,7 @@ Dim As Integer i,j,k
 	
 	If tdark=1 Then glenable gl_lighting
 
-Var cos1save=cos1,sin1save=sin1,o1save=o1
+cos1save=cos1:sin1save=sin1:o1save=o1
 cos1=tcos1:sin1=tsin1:o1=o1+heado1
 
 	glpushmatrix
@@ -3592,15 +3597,27 @@ If Abs(nnshipx-mx)<50 Then
 	If Abs(nnshipy-my)<80 And testmouse=0 Then
 		mx-=cos1*5
 		my-=sin1*5
-		Var dxy=(nnshipx-mx)*sin1-(nnshipy-my)*cos1
+		'Var dxy=(nnshipx-mx)*sin1-(nnshipy-my)*cos1
+		Var do1=nnshipo1-o1
+		If tcanoe=1 Then do1=nnshipo1-canoeo1
+		If tcanoe=2 Then do1=nnshipo1-shipo1
+		While do1>180:do1-=360:Wend
+		While do1<-180:do1+=360:Wend
+		If do1>90 Then do1-=180
+		If do1<-90 Then do1+=180
+		Var dxy=do1
 		If dxy>0 Then
-			o1+=7
-			mx-=sin1*4
-			my+=cos1*4
+			o1save+=7
+			canoeo1+=7
+			shipo1+=7
+			mx-=sin1*2'4
+			my+=cos1*2'4
 		Else
-			o1-=7
-			mx+=sin1*4
-			my-=cos1*4
+			o1save-=7
+			canoeo1-=7
+			shipo1-=7
+			mx+=sin1*2'4
+			my-=cos1*2'4
 		EndIf
 	EndIf
 EndIf
