@@ -3526,7 +3526,7 @@ EndIf
          gldisable gl_alpha_test
          shipvoileo12+=(1-shipvoileo12)*min(1.0,0.15*kfps)
          glpushmatrix
-         glscalef(1,shipvoileo12*(1+(kwindv-1)*3),1)
+         glscalef(1,shipvoileo12*(1.01+(kwindv-1)+max(0.0,kwindv-0.9)*0.3*Cos(Timer*8)),1)
          glcalllist shiplistvoile2
          glpopmatrix         
          glpushmatrix
