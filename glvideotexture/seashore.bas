@@ -3495,8 +3495,9 @@ EndIf
   		   If co1>0 Then
   		   	windprop=(windvv-shipv*(co1+0.115))*kvoile
   		   ElseIf co1>-0.94 Then 
-  		   	'windprop=(windvv*(1+1.06*co1)+shipv*(co1-0.115))*kvoile
-  		   	windprop=(windvv*(1+1.0*co1)+shipv*(co1-0.115))*kvoile
+  		   	''windprop=(windvv*(1+1.06*co1)+shipv*(co1-0.115))*kvoile
+  		   	'windprop=(windvv*(1+1.0*co1)+shipv*(co1-0.115))*kvoile
+  		   	windprop=(windvv*(1+1.0*co1)+shipv*(co1*0.82-0.115))*kvoile
   		   Else 
   		   	windprop=(windvv*(1+1.19*co1)+shipv*(co1-0.115))*kvoile
   		   	treversewind=1
