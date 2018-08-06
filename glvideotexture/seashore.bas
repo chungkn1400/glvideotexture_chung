@@ -3580,12 +3580,17 @@ EndIf
      EndIf  
 End Sub 
 Dim Shared As Single nshipy,nshipz,nshipo1,nshipo2,nshipo3,avgcanoez
-Dim Shared As Single nnshipx,nnshipy,nnshipz,nnshipo1,nnshipo2,nnshipo3
+Dim Shared As Single nnshipx,nnshipy,nnshipz,nnshipo1,nnshipo2,nnshipo3,shipmx0,shipmy0
 Sub drawnship()
 Dim As Integer i
 avgcanoez+=(canoez-avgcanoez)*kfps*0.03'0.003
 nshipx=1600:nshipz=canoez-avgcanoez'+4.55
-If mx>x100 Then nshipz+=min(20.0,collidez2+6)
+If mx>x100 Then
+	nshipz+=min(20.0,collidez2+6)
+	If max(Abs(nshipx-mx),Abs(nshipy-my))<100 Then
+		nshipz=min(mz+15,nshipz)
+	EndIf
+EndIf
 If mx<nshipx-400 Then nshipz=canoez+6
 'If mx>nshipx+600 Then nshipz=canoez
 Var dist=4000
@@ -3594,6 +3599,9 @@ While nshipy<my-dist:nshipy+=dist*1.999:nnshipy=nshipy:nnshipx=nshipx:Wend
 nshipo3=Sin(time1*2.7)*4
 nshipo2=canoeo2
 nshipo1=-90
+If max(Abs(mx-shipmx0),Abs(my-shipmy0))>30 Then
+	shipmx0=mx:shipmy0=my
+EndIf
 If Abs(nnshipx-mx)<50 Then
 	If Abs(nnshipy-my)<80 And testmouse=0 Then
 		mx-=cos1*5
@@ -3611,17 +3619,20 @@ If Abs(nnshipx-mx)<50 Then
 			o1save+=7
 			canoeo1+=7
 			shipo1+=7
-			mx-=sin1*2'4
-			my+=cos1*2'4
+			mx=shipmx0:my=shipmy0
+			mx-=sin1*4
+			my+=cos1*4
 		Else
 			o1save-=7
 			canoeo1-=7
 			shipo1-=7
-			mx+=sin1*2'4
-			my-=cos1*2'4
+			mx=shipmx0:my=shipmy0
+			mx+=sin1*4
+			my-=cos1*4
 		EndIf
 	EndIf
 EndIf
+shipmx0=mx+Sgn(mx-nnshipx):shipmy0=my
 glcolor4f(1,1,1,1)
 glbindtexture(GL_TEXTURE_2D,shipbarretext)
      rotavion(nshipx-mx,nshipy-my,nshipz-mz)
