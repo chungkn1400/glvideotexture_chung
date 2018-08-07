@@ -244,6 +244,7 @@ msg+=crlf+"A,E,Q,D  =>  turn head (sail mode)"
 msg+=crlf+"F1 => help"
 msg+=crlf+"F3 => change time"
 msg+=crlf+"ctrl+C => number of clouds"
+msg+=crlf+"H => horse"
 guinotice msg
 time0=timer
 End Sub
@@ -323,6 +324,10 @@ Sub initsounds()
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias rain",0,0,0)
    soundfic="sounds/beethoven4.mp3"
    mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias beethoven",0,0,0)
+   soundfic="sounds/horse.mp3"
+   mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias horse",0,0,0)
+   soundfic="sounds/foot.mp3"
+   mcisendstring("open "+chr$(34)+soundfic+chr$(34)+" shareable alias foot",0,0,0)
    mcisendstring("play hello from 0",0,0,0)
    mcisendstring("play ocean from 0 repeat",0,0,0)
    mcisendstring("play nature from 0 repeat",0,0,0)
@@ -334,6 +339,10 @@ Sub initsounds()
 	mcisendstring("setaudio wind volume to "+Str(Int(160)),0,0,0)
 	mcisendstring("setaudio subwater volume to "+Str(Int(600)),0,0,0)
 	mcisendstring("setaudio rain volume to "+Str(Int(750)),0,0,0)
+	mcisendstring("setaudio horse volume to "+Str(Int(750)),0,0,0)
+	mcisendstring("setaudio foot volume to "+Str(Int(750)),0,0,0)
+	mcisendstring("setaudio nemo volume to "+Str(Int(650)),0,0,0)
+	mcisendstring("setaudio beethoven volume to "+Str(Int(650)),0,0,0)
 End Sub
 Sub closesounds()
    mcisendstring("close hello",0,0,0)
@@ -347,7 +356,22 @@ Sub closesounds()
    mcisendstring("close nemo",0,0,0)
    mcisendstring("close rain",0,0,0)
    mcisendstring("close beethoven",0,0,0)
+   mcisendstring("close horse",0,0,0)
+   mcisendstring("close foot",0,0,0)
    mcisendstring("close all",0,0,0)
+End Sub
+Dim Shared As Single soundvol=1.7'3
+Dim Shared As Double tsoundfoot
+Sub soundfoot(kvol As Single=1.0)
+	If Timer>tsoundfoot+0.65 Then
+		tsoundfoot=Timer
+	   Dim As Integer vol=Int(min(1000.0,2500*soundvol*0.05))
+   	mcisendstring("setaudio foot volume to "+Str(Int(0.9*vol*kvol)),0,0,0)
+		mcisendstring("play foot from 0",0,0,0)
+	EndIf
+End Sub
+Sub soundhorse
+   mcisendstring("play horse from 0",0,0,0)
 End Sub
 Dim Shared As Double twater,twater2,tsubwater 
 Sub soundwaterwave(dt As Double=0.7)
@@ -726,12 +750,13 @@ Const As Single degtorad=ASin(1)/90
 Const As Single radtodeg=90/ASin(1)
 Dim Shared As Integer tactive,trun
 
-Dim Shared As Single collidex,collidey,collidez,collidex2,collidey2,collidez2,tswim
-Dim Shared  As Single mx0,my0,mz0,o10,mz1,o20,mzsub,ksail=1,windo1
+Dim Shared As Single collidex,collidey,collidez,collidex2,collidey2,collidez2
+Dim Shared As Integer tswim,tfoothorse,tmovehorse2
+Dim Shared  As Single mx0,my0,mz0,o10,mz1,o20,mzsub,ksail=1,windo1,o2horse
 Dim Shared As double time1,time2,dtime=0,fps=1,timemsg,kfps=1
 time0=Timer
 
-Randomize(0)
+Randomize(Timer)
 mz=max(mz,8.0)
 windo1=(Rnd-0.5)*360
 
@@ -794,14 +819,20 @@ While quit=0 And guitestkey(vk_escape)=0
     If guitestkey(vk_c) And guitestkey(vk_control)=0 Then subcanoe():Sleep 200
     If guitestkey(vk_c) And guitestkey(vk_control) Then subncloud():Sleep 200
     If (guitestkey(vk_up) Or (mouseforward And tmm))And trun=0 Then
-    	 Var kkfps=kfps:If mx>x100 Then kkfps*=0.3*1.4
+    	 Var kkfps=kfps
+    	 If mx>x100 And tfoothorse=0 Then kkfps*=0.3*1.4
+    	 If mx>x100 And tfoothorse=1 Then kkfps*=1+(0.3*1.4-1)*(mx-x100*0.6)/(mx)
     	 If tswim=1 Then kkfps*=0.40+0.3*Cos(time1)*Cos(time1)
+    	 If tfoothorse=1 And tmovehorse2<3 Then kkfps*=0.63
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
     	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
     EndIf
     If trun=1 Then
-    	 Var kkfps=kfps:If mx>x100 Then kkfps*=0.2*1.4
+    	 Var kkfps=kfps
+    	 If mx>x100 And tfoothorse=0 Then kkfps*=0.2*1.4
+    	 If mx>x100 And tfoothorse=1 Then kkfps*=1+(0.2*1.4-1)*(mx-x100*0.6)/(mx)
     	 If tswim=1 Then kkfps*=0.15+0.3*Cos(time1)*Cos(time1)
+    	 If tfoothorse=1 And tmovehorse2<3 Then kkfps*=0.63
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
     	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
     EndIf
@@ -2094,6 +2125,7 @@ Declare Sub drawsmokes()
 Declare Sub addsmoke(ByVal mx As Single,ByVal my As Single,ByVal mz As Single,ByVal itype As Integer=0,ByVal vz As Single=0)
 Declare Sub drawcanoe()
 Declare Sub drawnship()
+Declare Sub drawhorse()
 Declare Sub drawhelene()
 Declare Sub drawkate()
 Declare Sub drawsunset()
@@ -2203,6 +2235,8 @@ Dim As Integer i,j,k
    If mz>4 Then
    	o22=0:o33=0:z22=0
    EndIf
+   If tfoothorse=1 And mx>x100 Then z22+=((mx-x100*0.6)/mx)*10
+   If tfoothorse=1 Then z22+=o2horse*0.1+1.2
    
    While o1>180:o1-=360:Wend
    While o1<-180:o1+=360:Wend
@@ -2262,7 +2296,7 @@ If mx<1200 Or mz>8 Then
 	glpushmatrix
 	gltranslatef(dmmx,0,0) 
 	drawsea0()
-	If mx>150 Or mz>15 Then
+	If mx>150 Or mz>15 Or tfoothorse=1 Then
 		drawsea0(70)
 	EndIf 	
    If mx>220 Or mz>30 Then
@@ -2347,6 +2381,13 @@ EndIf
 	drawfire()
 	drawsmokes()
    glnormal3f(0,0,1)
+
+
+    If tcanoe=0 Then
+      drawhorse()
+    Else
+    	tfoothorse=0
+    EndIf
 
    If o2>-45 Then'and mx<x100
    	testcollide()
@@ -3338,8 +3379,8 @@ If canoetext=0 Then
 EndIf
 If tcanoe=0 Then
 	drawcanoe0
-	If tswim=0 Then trun=0
-	trun=0
+	If tswim=0 And tfoothorse=0 Then trun=0
+	'trun=0
 	'Exit sub
  Var tt=Timer 	
  If guitestkey(vk_up) Then 
@@ -3368,7 +3409,7 @@ If tcanoe=0 Then
     If tswim=1 Or mycolor>avgcolor*1.4 Then
     	soundsubwater(2)
       'Var mycolor2=(winpixr2+winpixg2+winpixb2)*0.33+10
-    	if mycolor>avgcolor*1.305 Then'1.4 Then
+    	if mycolor>avgcolor*1.305 And (tfoothorse=0 Or mx>x100+86) Then'1.4 Then
     		If tdrawraindrops+dtraindrop<Timer Then tdrawraindrops=Timer 
     	EndIf
     EndIf
@@ -3680,6 +3721,88 @@ glbindtexture(GL_TEXTURE_2D,shipbarretext)
       gldisable gl_alpha_test
       If tdark=0 Then gldisable gl_lighting
      EndIf  
+End Sub 
+Dim Shared As Single o1horse=0,o3horse=0,tmovehorse=1,tframehorse=0,vhorse=0,vhorse2=0
+Dim Shared As Integer tmovehorse20=0
+Dim Shared As uint horselist,horsetext
+Dim Shared As Integer joy1dx,joy1dy
+Sub subtestmovehorse()
+	  Var test=0
+	  If (guitestkey(vk_left) Or joy1dx<-8000) Then test=1':o1+=dt*0.07
+     if (guitestkey(vk_right)Or joy1dx>8000) Then test=1':o1-=dt*0.07	  
+     if (tfoothorse=1 and trun=1) Then test=0.97
+     if (guitestkey(vk_up)Or guitestkey(vk_space) Or joy1dy<-8000) Then test=1.5';x+=dt*0.004*cos1;y+=dt*0.004*sin1;
+     if (guitestkey(vk_down)or joy1dy>8000) Then test=1';x-=dt*0.003*cos1;y-=dt*0.003*sin1;
+	  If(test>=0.1 And tfoothorse=1) Then
+	  	tmovehorse=test
+	  Else
+	  	tmovehorse-=kfps*0.027
+	  EndIf
+	  If(tmovehorse<0) Then tmovehorse=0	
+End Sub
+Sub drawhorse()
+If horsetext=0 Then
+	Randomize(timer)
+	If Rnd<0.3 Then
+		horsetext=guiloadtexture(ExePath+"/objects/horse.jpg")
+	ElseIf Rnd<0.5 Then
+		horsetext=guiloadtexture(ExePath+"/objects/horsegray.jpg")
+	Else 	
+		horsetext=guiloadtexture(ExePath+"/objects/horsewhite.jpg")
+	EndIf
+   horselist=loadlist(ExePath+"/objects/horseheadlow.3ds",100)	
+EndIf
+       If guitestkey(vk_h) And mx<x100+100 Then tfoothorse=(tfoothorse+1)Mod 2:Sleep 300
+       If tfoothorse<>1 Then
+         'If tfootmove>0.5 Then 
+         '	soundfoot(2.4)
+         'EndIf
+         Exit Sub 
+       Else
+       	tswim=0
+       	mx=min(mx,x100+100-5)
+       EndIf
+       
+	   subtestmovehorse()
+	   Var tframe=time2
+      tmovehorse20=tmovehorse2:tmovehorse2=0
+		If guitestkey(vk_up)Or guitestkey(vk_space) Or joy1dy<-8000 Then tmovehorse2=3
+      tframehorse+=30*kfps*(tmovehorse*0.6+0.3)
+		o2horse=sin(tframehorse*0.0065)*4*tmovehorse
+		o2horse+=sin(tframehorse*0.0016)*3-3'//*tmovehorse
+		If o2horse<-0.3-3 And tmovehorse>0.001 Then
+			if mx>x100 Then
+				If Timer>tsoundfoot+0.67 Then
+					soundwaterwave()
+					soundfoot(2.4)
+				EndIf
+			Else
+				soundfoot(2.4)
+			EndIf 
+		EndIf
+		If guitestkey(vk_up)Or guitestkey(vk_space) Or joy1dy<-8000 Then vhorse2=0.1
+		If guitestkey(vk_down)Or joy1dy>8000 Then o2horse+=7:vhorse2=0
+		o1horse=sin(tframehorse*0.0014)*8
+		o3horse=sin(tframehorse*0.0028)*23*cos(tframe*0.0003)
+		if(o1>o10+0.0001) Then o3horse-=10:o1horse+=7:tmovehorse2=1
+		if(o1<o10-0.0001) Then o3horse+=10:o1horse-=7:tmovehorse2=2
+		o10=o1
+		if(tmovehorse2<>tmovehorse20 And tmovehorse2<>0) Then 
+		   If Rnd<0.3 Or (Rnd<0.6 And tmovehorse2=3) Then 
+		        soundhorse()
+		   EndIf 
+		EndIf    
+		glpushmatrix
+		glloadidentity
+		gltranslatef(0,-28-24*sin2,-38)
+		glrotatef(o1horse, 0, 1, 0)
+		glrotatef(43+o2horse-o2, 1, 0, 0)		
+		glrotatef(-4+o3horse, 0, 0, 1)	
+		glrotatef(44, 1, 0, 0)		
+		glscalef(0.5,0.5,-0.5)
+      glbindTexture(gl_TEXTURE_2D,  horsetext)
+      glcalllist(horselist)
+      glpopmatrix
 End Sub 
 Dim Shared As uint helentext,shadowhelentext,katetext,shadowkatetext,helenbluetext,helenredtext,helenyellowtext
 Dim Shared As uint shadowhelen2text,shadowkate2text
