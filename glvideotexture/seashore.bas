@@ -3530,7 +3530,7 @@ EndIf
     		If do1>0 Then glscalef(1,-1,1)
     		glcalllist shiplistnovoile
          gldisable gl_alpha_test
-         shipvoileo12+=(1-shipvoileo12)*min(1.0,0.15*kfps)
+         shipvoileo12+=(1+shipvoileo1*0.0022-shipvoileo12)*min(1.0,0.15*kfps)
          glpushmatrix
          glscalef(1,shipvoileo12*(1.01+(kwindv-1)+max(0.0,kwindv-0.9)*0.3*Cos(Timer*8)),1)
          glcalllist shiplistvoile2
@@ -3606,6 +3606,10 @@ If Abs(nnshipx-mx)<50 Then
 	If Abs(nnshipy-my)<80 And testmouse=0 Then
 		mx-=cos1*5
 		my-=sin1*5
+		canoex-=cos1*5
+		canoey-=sin1*5
+		shipx-=cos1*5
+		shipy-=sin1*5
 		'Var dxy=(nnshipx-mx)*sin1-(nnshipy-my)*cos1
 		Var do1=nnshipo1-o1
 		If tcanoe=1 Then do1=nnshipo1-canoeo1
@@ -3614,21 +3618,29 @@ If Abs(nnshipx-mx)<50 Then
 		While do1<-180:do1+=360:Wend
 		If do1>90 Then do1-=180
 		If do1<-90 Then do1+=180
-		Var dxy=do1
+		Var dxy=do1,d7=6
 		If dxy>0 Then
-			o1save+=7
-			canoeo1+=7
-			shipo1+=7
+			o1save+=d7
+			canoeo1+=d7
+			shipo1+=d7
 			mx=shipmx0:my=shipmy0
 			mx-=sin1*4
 			my+=cos1*4
+			canoex-=sin1*4
+			canoey+=cos1*4
+			shipx-=sin1*4
+			shipy+=cos1*4
 		Else
-			o1save-=7
-			canoeo1-=7
-			shipo1-=7
+			o1save-=d7
+			canoeo1-=d7
+			shipo1-=d7
 			mx=shipmx0:my=shipmy0
 			mx+=sin1*4
 			my-=cos1*4
+			canoex+=sin1*4
+			canoey-=cos1*4
+			shipx+=sin1*4
+			shipy-=cos1*4
 		EndIf
 	EndIf
 EndIf
