@@ -340,7 +340,7 @@ Sub initsounds()
 	mcisendstring("setaudio subwater volume to "+Str(Int(600)),0,0,0)
 	mcisendstring("setaudio rain volume to "+Str(Int(750)),0,0,0)
 	mcisendstring("setaudio horse volume to "+Str(Int(750)),0,0,0)
-	mcisendstring("setaudio foot volume to "+Str(Int(750)),0,0,0)
+	mcisendstring("setaudio foot volume to "+Str(Int(970)),0,0,0)
 	mcisendstring("setaudio nemo volume to "+Str(Int(650)),0,0,0)
 	mcisendstring("setaudio beethoven volume to "+Str(Int(650)),0,0,0)
 End Sub
@@ -360,13 +360,10 @@ Sub closesounds()
    mcisendstring("close foot",0,0,0)
    mcisendstring("close all",0,0,0)
 End Sub
-Dim Shared As Single soundvol=1.7'3
 Dim Shared As Double tsoundfoot
 Sub soundfoot(kvol As Single=1.0)
 	If Timer>tsoundfoot+0.65 Then
 		tsoundfoot=Timer
-	   Dim As Integer vol=Int(min(1000.0,2500*soundvol*0.05))
-   	mcisendstring("setaudio foot volume to "+Str(Int(0.9*vol*kvol)),0,0,0)
 		mcisendstring("play foot from 0",0,0,0)
 	EndIf
 End Sub
@@ -2258,7 +2255,7 @@ Dim As Integer i,j,k
 
 	'dtime=time1-time0
 	'itime=Int(dtime)Mod 12
-	
+	itime+=1:If itime>1000 Then itime=1
 	
 	If tdark=1 Then glenable gl_lighting
 
@@ -3761,6 +3758,10 @@ EndIf
        Else
        	tswim=0
        	mx=min(mx,x100+100-5)
+       	If (itime Mod 20)=1 then
+       	  If Abs(o1save-90)<4 Then o1save=90
+       	  If Abs(o1save+90)<4 Then o1save=-90
+       	EndIf   
        EndIf
        
 	   subtestmovehorse()
