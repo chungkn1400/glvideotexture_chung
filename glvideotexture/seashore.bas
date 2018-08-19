@@ -422,7 +422,7 @@ sub soundnemo
 			t210=210
 		Else 			
 			mcisendstring("play beethoven from 0",0,0,0)
-			t210=298'324
+			t210=324'298'324
 		EndIf
 		tsoundnemo0=Timer 
 		tsoundnemo=Timer+Rnd*180
@@ -798,12 +798,12 @@ While quit=0 And guitestkey(vk_escape)=0
     Var tmm=0:If Timer>timemouse+0.2 Then tmm=-1
     If guitestkey(vk_numpad1) Then o1-=3*kfps
     If guitestkey(vk_numpad3) Then o1+=3*kfps
-    If guitestkey(vk_numpad8) Or guitestkey(vk_b)Or guitestkey(vk_prior)Or mouseup And tmm Then o2=min(85.0,o2+3*kfps)
-    If guitestkey(vk_numpad2) Or guitestkey(vk_n)Or guitestkey(vk_next)Or mousedown And tmm Then o2=max(-85.0,o2-3*kfps)
+    If guitestkey(vk_numpad8) Or guitestkey(vk_b)Or guitestkey(vk_prior)Or (mouseup And tmm) Then o2=min(85.0,o2+3*kfps)
+    If guitestkey(vk_numpad2) Or guitestkey(vk_n)Or guitestkey(vk_next)Or (mousedown And tmm) Then o2=max(-85.0,o2-3*kfps)
     If guitestkey(vk_numpad5) Then o2=0
     If tcanoe<>2 Then ksail=1
-    If guitestkey(vk_left) Or guitestkey(vk_numpad1) Or mouseleft And tmm Then o1+=3*kfps*ksail
-    If guitestkey(vk_right) Or guitestkey(vk_numpad3) Or mouseright And tmm Then o1-=3*kfps*ksail
+    If guitestkey(vk_left) Or guitestkey(vk_numpad1) Or( mouseleft And tmm) Then o1+=3*kfps*ksail
+    If guitestkey(vk_right) Or guitestkey(vk_numpad3) Or (mouseright And tmm) Then o1-=3*kfps*ksail
     If guitestkey(vk_a) Or guitestkey(vk_q) Then
     	heado1=heado1+kfps*1.4
     	If heado1>180 Then heado1-=360
@@ -831,7 +831,7 @@ While quit=0 And guitestkey(vk_escape)=0
     	 If tswim=1 Then kkfps*=0.15+0.3*Cos(time1)*Cos(time1)
     	 If tfoothorse=1 And tmovehorse2<3 Then kkfps*=0.63
     	 mx+=vv*cos1*kkfps:my+=vv*sin1*kkfps
-    	 If Abs(o2)<13 Or o2>22 Or o2<-50 Then o2=0
+    	 If (Abs(o2)<13 Or o2>22 Or o2<-50)And tfoothorse=0 Then o2=0
     EndIf
     If guitestkey(vk_down) Or mouseback And tmm Then
     	 mx-=0.5*vv*cos1*kfps:my-=0.5*vv*sin1*kfps
@@ -872,7 +872,7 @@ While quit=0 And guitestkey(vk_escape)=0
   	 If guitestkey(vk_down) Then mzz=0':mz1=0
   	 If guitestkey(vk_up) And tswim=1 And dz<0 Then soundsubwater(5)
   	 If mz1<-0.01 And dz<0 And mx<x330 Then soundwaterwave(1.4)
-  	 tswim=0:If mz1<-0.01 And mx<x330 Then tswim=1
+  	 tswim=0:If mz1<-0.01 And mx<x330 And mx>x100 Then tswim=1
   	 If mz<10 Then
   	 	If cos1>0 Or mz>0 Then
   	 	   mz=max(mzz,mz-0.2*kfps)
@@ -2216,6 +2216,7 @@ Sub rotavion2(ByVal x As Single,ByVal y As Single)
  y2=-x*sin1+y*cos1
  'z2=-x1*sin2+z*cos2
 End Sub
+Dim Shared As Integer tblonville
 Dim Shared As Single prop,vprop,nshipx,deauvilley,o1save,cos1save,sin1save
 Sub display()
 Dim As Integer i,j,k 
@@ -2228,6 +2229,8 @@ Dim As Integer i,j,k
    yh=28'50'28
    Var dx=max(0.0,min(2000.0,4000-Abs(my-deauvilley)))
    mx=max(-2400.0-2000-dx,min(3000.0,mx))
+   If my>99000 Then my=-98000
+   If my<-99000 Then my=98000
    mz=max(-15.0,min(200.0,mz))
    If mz>4 Then
    	o22=0:o33=0:z22=0
@@ -2245,8 +2248,12 @@ Dim As Integer i,j,k
    cos3=Cos((o3+o33)*degtorad):sin3=Sin((o3+o33)*degtorad)
    dmx=cos1*cos2:dmy=sin1*cos2:dmz=sin2
    Var do1=o1
-   If tcanoe=0 Then heado1=0
-   If tcanoe>0 Then do1+=heado1
+   If tcanoe=0 And tfoothorse=0 Then heado1=0
+   If tcanoe>0 or tfoothorse=1 Then do1+=heado1
+   If tfoothorse=1 And tcanoe=0 Then
+   	heado1=max(-150.0,min(150.0,heado1))
+   	o2=max(-40.0,min(80.0,o2))
+   EndIf
    tcos1=Cos(do1*degtorad):tsin1=Sin(do1*degtorad)
    Var ddmx=tcos1
    Var ddmy=tsin1
@@ -2380,12 +2387,6 @@ EndIf
    glnormal3f(0,0,1)
 
 
-    If tcanoe=0 Then
-      drawhorse()
-    Else
-    	tfoothorse=0
-    EndIf
-
    If o2>-45 Then'and mx<x100
    	testcollide()
    EndIf
@@ -2398,6 +2399,13 @@ EndIf
 	drawcanoe()
    cos1=tcos1:sin1=tsin1:o1=o1+heado1
    
+    If tcanoe=0 Then
+      glClear (GL_DEPTH_BUFFER_BIT)
+      drawhorse()
+    Else
+    	tfoothorse=0
+    EndIf
+
 	If Timer<tdrawraindrops+dtraindrop Then drawraindrops()
 	
    gldisable gl_lighting
@@ -3111,18 +3119,32 @@ Dim As Integer i,j,k
  glenable gl_depth_test
  gldisable gl_alpha_test
 End Sub
-Dim Shared As uint deauvilletext,deauvillelist
-Dim Shared As Single deauvillex,deauvillez,deauvilleo1
+Dim Shared As uint deauvilletext,deauvillelist,blonvillelist
+Dim Shared As Single deauvillex,deauvillez,deauvilleo1,deauvillex0,deauvilley0,blonvillex0,blonvilley0
 Sub drawdeauville()
 Dim As Integer i 
 If deauvilletext=0 Then
 	deauvilletext=guiloadtexture(ExePath+"/objects/deauville.jpg")
    deauvillelist=loadlist(ExePath+"/objects/deauville.obj",3000)
    'deauvillelist=loadlist(ExePath+"/objects/empire.obj",3000)
+   blonvillelist=loadlist(ExePath+"/objects/blonville.obj",3000)
 	deauvillex=-700
 	deauvilley=-4700
+	deauvillex0=-700
+	deauvilley0=-4700
+	blonvillex0=-1050
+	blonvilley0=10000
 	deauvillez=0
 	deauvilleo1=180+47
+EndIf
+
+tblonville=0
+deauvillex=deauvillex0
+deauvilley=deauvilley0
+If Abs(my-deauvilley0)>Abs(my-blonvilley0) Then
+	tblonville=1
+	deauvillex=blonvillex0
+	deauvilley=blonvilley0
 EndIf
 glcolor3f(1,1,1)
 glbindtexture(GL_TEXTURE_2D,deauvilletext)
@@ -3132,9 +3154,15 @@ glbindtexture(GL_TEXTURE_2D,deauvilletext)
     	glpushmatrix
   		gltranslatef(deauvillex,deauvilley,deauvillez)
     	glrotatef(deauvilleo1,0,0,1)
-    	Var sc=1.5'2
-    	glscalef(sc,sc,1)
-    	glcalllist deauvillelist
+    	If tblonville=0 Then 
+    	  Var sc=1.5'2
+    	  glscalef(sc,sc,1)
+        glcalllist deauvillelist
+      Else
+    	  Var sc=1.5'2
+    	  glscalef(sc,sc,1)
+        glcalllist blonvillelist
+    	EndIf 
     	glpopmatrix
      EndIf
 If tdark=1 then glenable gl_lighting
@@ -3795,6 +3823,7 @@ EndIf
 		EndIf    
 		glpushmatrix
 		glloadidentity
+		glrotatef(-heado1,0,1,0)
 		gltranslatef(0,-28-24*sin2,-38)
 		glrotatef(o1horse, 0, 1, 0)
 		glrotatef(43+o2horse-o2, 1, 0, 0)		
